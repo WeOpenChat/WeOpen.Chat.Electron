@@ -1,17 +1,17 @@
-import { parse } from 'url';
-
-import React, { useMemo, FC, DragEvent, MouseEvent } from 'react';
+import { css } from '@rocket.chat/css-in-js';
+import { IconButton, Badge, Box } from '@rocket.chat/fuselage';
+import type { DragEvent, MouseEvent } from 'react';
+import { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../store/actions';
+import type { RootAction } from '../../../store/actions';
 import {
   SIDE_BAR_SERVER_SELECTED,
   SIDE_BAR_CONTEXT_MENU_TRIGGERED,
 } from '../../actions';
 import {
   Avatar,
-  Badge,
   Favicon,
   Initials,
   KeyboardShortcut,
@@ -35,7 +35,7 @@ type ServerButtonProps = {
   onDrop: (event: DragEvent) => void;
 };
 
-const ServerButton: FC<ServerButtonProps> = ({
+const ServerButton = ({
   url,
   title,
   shortcutNumber,
@@ -50,7 +50,7 @@ const ServerButton: FC<ServerButtonProps> = ({
   onDragEnd,
   onDragEnter,
   onDrop,
-}) => {
+}: ServerButtonProps) => {
   const dispatch = useDispatch<Dispatch<RootAction>>();
 
   const handleServerClick = (): void => {
@@ -60,7 +60,7 @@ const ServerButton: FC<ServerButtonProps> = ({
   const initials = useMemo(
     () =>
       title
-        ?.replace(url, parse(url).hostname ?? '')
+        ?.replace(url, new URL(url).hostname ?? '')
         ?.split(/[^A-Za-z0-9]+/g)
         ?.slice(0, 2)
         ?.map((text) => text.slice(0, 1).toUpperCase())
@@ -88,12 +88,30 @@ const ServerButton: FC<ServerButtonProps> = ({
       onDragEnter={onDragEnter}
       onDrop={onDrop}
     >
-      <Avatar isSelected={isSelected}>
-        <Initials visible={!favicon}>{initials}</Initials>
-        <Favicon draggable='false' src={favicon ?? ''} visible={!!favicon} />
-      </Avatar>
-      {mentionCount && <Badge>{mentionCount}</Badge>}
-      {!userLoggedIn && <Badge>!</Badge>}
+      <IconButton
+        className={[isSelected && 'is-focused'].filter(Boolean).join(' ')}
+        icon={
+          <Avatar isSelected={isSelected}>
+            <Initials visible={!favicon}>{initials}</Initials>
+            <Favicon
+              draggable='false'
+              src={favicon ?? ''}
+              visible={!!favicon}
+            />
+          </Avatar>
+        }
+      />
+      <Box
+        className={css`
+          top: 0;
+          right: 0;
+          transform: translate(30%, -30%);
+        `}
+        position='absolute'
+      >
+        {mentionCount && <Badge variant='danger'>{mentionCount}</Badge>}
+        {!userLoggedIn && <Badge variant='danger'>!</Badge>}
+      </Box>
       {shortcutNumber && (
         <KeyboardShortcut visible={isShortcutVisible}>
           {process.platform === 'darwin' ? '⌘' : '^'}

@@ -1,14 +1,14 @@
 import { Box, Tabs } from '@rocket.chat/fuselage';
 import '@rocket.chat/fuselage-polyfills';
-import React, { FC, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
-import { RootState } from '../../../store/rootReducer';
+import type { RootState } from '../../../store/rootReducer';
 import { CertificatesTab } from './CertificatesTab';
 import { GeneralTab } from './GeneralTab';
 
-export const SettingsView: FC = () => {
+export const SettingsView = () => {
   const isVisible = useSelector(
     ({ currentView }: RootState) => currentView === 'settings'
   );
@@ -21,11 +21,10 @@ export const SettingsView: FC = () => {
       display={isVisible ? 'flex' : 'none'}
       flexDirection='column'
       height='full'
-      backgroundColor='surface'
+      backgroundColor='light'
     >
       <Box
         width='full'
-        minHeight={64}
         padding={24}
         display='flex'
         flexDirection='row'
@@ -50,7 +49,7 @@ export const SettingsView: FC = () => {
           {t('settings.certificates')}
         </Tabs.Item>
       </Tabs>
-      <Box m='x24'>
+      <Box m='x24' overflowY='auto'>
         {(currentTab === 'general' && <GeneralTab />) ||
           (currentTab === 'certificates' && <CertificatesTab />)}
       </Box>

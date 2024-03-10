@@ -5,7 +5,8 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import type { PushEvent } from '@octokit/webhooks-types';
 import fg from 'fast-glob';
-import { parse, SemVer } from 'semver';
+import type { SemVer } from 'semver';
+import { parse } from 'semver';
 
 import {
   getDevelopmentRelease,
@@ -115,9 +116,9 @@ const releaseTagged = async (version: SemVer, commitSha: string) => {
     //   await uploadSnap(
     //     path,
     //     (!version.prerelease && 'stable') ||
-    //     (version.prerelease[0] === 'candidate' && 'candidate') ||
-    //     (version.prerelease[0] === 'beta' && 'beta') ||
-    //     'edge'
+    //       (version.prerelease[0] === 'candidate' && 'candidate') ||
+    //       (version.prerelease[0] === 'beta' && 'beta') ||
+    //       'edge'
     //   );
     // }
   }

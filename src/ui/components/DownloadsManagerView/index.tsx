@@ -1,22 +1,26 @@
 import {
   Box,
   SearchInput,
-  Select,
   Icon,
-  Button,
   Pagination,
   Scrollable,
+  IconButton,
+  SelectLegacy,
 } from '@rocket.chat/fuselage';
 import { useLocalStorage } from '@rocket.chat/fuselage-hooks';
-import React, { useState, useMemo, useCallback, FC, ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
-import { Download, DownloadStatus } from '../../../downloads/common';
-import { RootState } from '../../../store/rootReducer';
+import type { Download } from '../../../downloads/common';
+import { DownloadStatus } from '../../../downloads/common';
+import { dispatch } from '../../../store';
+import type { RootState } from '../../../store/rootReducer';
+import { DOWNLOADS_BACK_BUTTON_CLICKED } from '../../actions';
 import DownloadItem from './DownloadItem';
 
-const DownloadsManagerView: FC = () => {
+const DownloadsManagerView = () => {
   const isVisible = useSelector(
     ({ currentView }: RootState) => currentView === 'downloads'
   );
@@ -24,6 +28,14 @@ const DownloadsManagerView: FC = () => {
   const [searchFilter, setSearchFilter] = useLocalStorage(
     'download-search',
     ''
+  );
+
+  const isSideBarEnabled = useSelector(
+    ({ isSideBarEnabled }: RootState) => isSideBarEnabled
+  );
+
+  const lastSelectedServerUrl = useSelector(
+    ({ lastSelectedServerUrl }: RootState) => lastSelectedServerUrl
   );
 
   const handleSearchFilterChange = useCallback(
@@ -52,11 +64,11 @@ const DownloadsManagerView: FC = () => {
   );
 
   const [serverFilter, setServerFilter] = useLocalStorage<
-    typeof serverFilterOptions[number][0]
+    (typeof serverFilterOptions)[number][0]
   >('download-server', '');
 
   const handleServerFilterChange = useCallback(
-    (value: typeof serverFilterOptions[number][0]) => {
+    (value: (typeof serverFilterOptions)[number][0]) => {
       setServerFilter(value);
     },
     [setServerFilter]
@@ -75,11 +87,11 @@ const DownloadsManagerView: FC = () => {
   );
 
   const [mimeTypeFilter, setMimeTypeFilter] = useLocalStorage<
-    typeof mimeTypeOptions[number][0]
+    (typeof mimeTypeOptions)[number][0]
   >('download-type', '');
 
   const handleMimeFilter = useCallback(
-    (value: typeof mimeTypeOptions[number][0]) => {
+    (value: (typeof mimeTypeOptions)[number][0]) => {
       setMimeTypeFilter(value);
     },
     [setMimeTypeFilter]
@@ -95,11 +107,11 @@ const DownloadsManagerView: FC = () => {
   );
 
   const [statusFilter, setStatusFilter] = useLocalStorage<
-    typeof statusFilterOptions[number][0]
+    (typeof statusFilterOptions)[number][0]
   >('download-tab', DownloadStatus.ALL);
 
   const handleTabChange = useCallback(
-    (value: typeof statusFilterOptions[number][0]) => {
+    (value: (typeof statusFilterOptions)[number][0]) => {
       setStatusFilter(value);
     },
     [setStatusFilter]
@@ -116,7 +128,15 @@ const DownloadsManagerView: FC = () => {
   const [currentPagination, setCurrentPagination] = useState(0);
 
   const showingResultsLabel = useCallback(
-    ({ count, current, itemsPerPage }) =>
+    ({
+      count,
+      current,
+      itemsPerPage,
+    }: {
+      count: number;
+      current: number;
+      itemsPerPage: number;
+    }) =>
       t('downloads.showingResults', {
         first: current + 1,
         last: Math.min(current + itemsPerPage, count),
@@ -150,12 +170,19 @@ const DownloadsManagerView: FC = () => {
       .sort((a, b) => b.itemId - a.itemId);
   });
 
+  const handleBackButton = function (): void {
+    dispatch({
+      type: DOWNLOADS_BACK_BUTTON_CLICKED,
+      payload: lastSelectedServerUrl,
+    });
+  };
+
   return (
     <Box
       display={isVisible ? 'flex' : 'none'}
       flexDirection='column'
       height='100vh'
-      backgroundColor='surface'
+      backgroundColor='light'
     >
       <Box
         minHeight={64}
@@ -165,6 +192,9 @@ const DownloadsManagerView: FC = () => {
         flexWrap='nowrap'
         alignItems='center'
       >
+        {!isSideBarEnabled && (
+          <IconButton icon='arrow-back' onClick={handleBackButton} />
+        )}
         <Box is='div' color='default' fontScale='h1'>
           {t('downloads.title')}
         </Box>
@@ -186,7 +216,7 @@ const DownloadsManagerView: FC = () => {
           <SearchInput
             value={searchFilter}
             placeholder={t('downloads.filters.search')}
-            addon={<Icon color='neutral-700' name='magnifier' size={20} />}
+            addon={<Icon name='magnifier' size={20} />}
             onChange={handleSearchFilterChange}
           />
         </Box>
@@ -197,7 +227,7 @@ const DownloadsManagerView: FC = () => {
           flexBasis='0'
           paddingInline={2}
         >
-          <Select
+          <SelectLegacy
             value={serverFilter}
             placeholder={t('downloads.filters.server')}
             options={serverFilterOptions}
@@ -205,7 +235,7 @@ const DownloadsManagerView: FC = () => {
           />
         </Box>
         <Box display='flex' flexGrow={3} flexShrink={3} paddingInline={2}>
-          <Select
+          <SelectLegacy
             value={mimeTypeFilter}
             placeholder={t('downloads.filters.mimeType')}
             options={mimeTypeOptions}
@@ -213,7 +243,7 @@ const DownloadsManagerView: FC = () => {
           />
         </Box>
         <Box display='flex' flexGrow={3} flexShrink={3} paddingInline={2}>
-          <Select
+          <SelectLegacy
             value={statusFilter}
             placeholder={t('downloads.filters.status')}
             options={statusFilterOptions}
@@ -221,14 +251,11 @@ const DownloadsManagerView: FC = () => {
           />
         </Box>
         <Box display='flex' flexGrow={1} flexShrink={1} paddingInline={2}>
-          <Button
-            small
-            ghost
+          <IconButton
+            icon='trash'
             title={t('downloads.filters.clear')}
             onClick={handleClearAll}
-          >
-            <Icon color='neutral-700' name='trash' size={24} />
-          </Button>
+          />
         </Box>
       </Box>
       <Scrollable>
@@ -247,7 +274,7 @@ const DownloadsManagerView: FC = () => {
           divider
           current={currentPagination}
           itemsPerPage={itemsPerPage}
-          count={(downloads && downloads.length) || 0}
+          count={downloads?.length || 0}
           showingResultsLabel={showingResultsLabel}
           onSetItemsPerPage={setItemsPerPage}
           onSetCurrent={setCurrentPagination}

@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-import { app } from 'electron';
+import { BrowserWindow, app, autoUpdater as nativeUpdater } from 'electron';
 import { autoUpdater } from 'electron-updater';
 
 import { listen, dispatch, select } from '../store';
-import { RootState } from '../store/rootReducer';
+import type { RootState } from '../store/rootReducer';
 import {
   UPDATE_DIALOG_SKIP_UPDATE_CLICKED,
   UPDATE_DIALOG_INSTALL_BUTTON_CLICKED,
@@ -26,7 +26,7 @@ import {
   UPDATES_NEW_VERSION_NOT_AVAILABLE,
   UPDATES_READY,
 } from './actions';
-import {
+import type {
   AppLevelUpdateConfiguration,
   UpdateConfiguration,
   UserLevelUpdateConfiguration,
@@ -214,6 +214,14 @@ export const setupUpdates = async (): Promise<void> => {
     dispatch({ type: UPDATES_NEW_VERSION_NOT_AVAILABLE });
   });
 
+  const nativeUpdateDownloadedCallback = () => {
+    nativeUpdater.removeListener(
+      'update-downloaded',
+      nativeUpdateDownloadedCallback
+    );
+    nativeUpdater.quitAndInstall();
+  };
+
   autoUpdater.addListener('update-downloaded', async () => {
     const response = await askUpdateInstall();
 
@@ -223,8 +231,20 @@ export const setupUpdates = async (): Promise<void> => {
     }
 
     try {
-      app.removeAllListeners('window-all-closed');
-      autoUpdater.quitAndInstall(true, true);
+      setImmediate(() => {
+        app.removeAllListeners('window-all-closed');
+        if (process.platform === 'darwin') {
+          const allBrowserWindows = BrowserWindow.getAllWindows();
+          allBrowserWindows.forEach((browserWindow) => {
+            browserWindow.removeAllListeners('close');
+            browserWindow.destroy();
+          });
+          nativeUpdater.checkForUpdates();
+          nativeUpdater.on('update-downloaded', nativeUpdateDownloadedCallback);
+        } else {
+          autoUpdater.quitAndInstall(true, true);
+        }
+      });
     } catch (error) {
       error instanceof Error &&
         dispatch({

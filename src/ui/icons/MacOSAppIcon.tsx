@@ -1,6 +1,4 @@
-import React, { FC } from 'react';
-
-const MacOSAppIcon: FC = () => (
+const MacOSAppIcon = () => (
   <svg
     width='100%'
     viewBox='0 0 1024 1024'

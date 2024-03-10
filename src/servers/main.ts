@@ -4,6 +4,7 @@ import path from 'path';
 import { app } from 'electron';
 import { satisfies, coerce } from 'semver';
 
+import { packageJsonInformation } from '../app/main/app';
 import { invoke } from '../ipc/main';
 import { select, dispatch, listen } from '../store';
 import { hasMeta } from '../store/fsa';
@@ -13,15 +14,15 @@ import {
 } from '../ui/actions';
 import { getRootWindow } from '../ui/main/rootWindow';
 import { getWebContentsByServerUrl } from '../ui/main/serverView';
+import * as urls from '../urls';
 import {
   SERVER_URL_RESOLUTION_REQUESTED,
   SERVER_URL_RESOLVED,
   SERVERS_LOADED,
 } from './actions';
+import type { Server, ServerUrlResolutionResult } from './common';
 import {
   ServerUrlResolutionStatus,
-  Server,
-  ServerUrlResolutionResult,
   isServerUrlResolutionResult,
 } from './common';
 
@@ -84,7 +85,7 @@ export const resolveServerUrl = async (
     if (
       !/(^https?:\/\/)|(\.)|(^([^:]+:[^@]+@)?localhost(:\d+)?$)/.test(input)
     ) {
-      return resolveServerUrl(`https://${input}.rocket.chat`);
+      return resolveServerUrl(urls.rocketchat.subdomain(input));
     }
 
     if (error?.name === 'AbortError') {
@@ -118,7 +119,7 @@ const loadAppServers = async (): Promise<Record<string, string>> => {
     );
 
     if (process.platform === 'darwin') {
-      const darwinFilePath = '/Library/Preferences/Rocket.Chat/servers.json';
+      const darwinFilePath = `/Library/Preferences/${packageJsonInformation.productName}/servers.json`;
       if (fs.existsSync(darwinFilePath)) filePath = darwinFilePath;
     }
 

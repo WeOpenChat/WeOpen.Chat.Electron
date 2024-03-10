@@ -3,34 +3,36 @@
   "name": "@rocket.chat/desktop-release-action",
   "version": "1.0.0",
   "scripts": {
-    "build": "ncc build src/index.ts -o dist"
+    "build": "ncc build src/index.ts -o dist",
+    "lint": "run-s .:lint:eslint .:lint:tsc",
+    ".:lint:eslint": "eslint .",
+    ".:lint:tsc": "tsc --noEmit"
   },
   "devDependencies": {
-    "@rocket.chat/eslint-config-alt": "^0.26.0",
-    "@rocket.chat/prettier-config": "^0.26.0",
-    "@types/node": "12.20.15",
-    "@vercel/ncc": "^0.28.6",
-    "cross-env": "^7.0.3",
-    "eslint": "^7.28.0",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^2.3.1",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.3.2"
+    "@rocket.chat/eslint-config": "~0.6.0",
+    "@rocket.chat/prettier-config": "~0.31.25",
+    "@types/node": "~16.0.3",
+    "@typescript-eslint/eslint-plugin": "~6.17.0",
+    "@typescript-eslint/parser": "~6.17.0",
+    "@vercel/ncc": "~0.38.1",
+    "eslint": "~8.56.0",
+    "eslint-config-prettier": "~9.1.0",
+    "eslint-import-resolver-typescript": "~3.6.1",
+    "eslint-plugin-import": "~2.29.1",
+    "npm-run-all": "~4.1.5",
+    "prettier": "~3.1.1",
+    "rimraf": "~5.0.5",
+    "typescript": "~5.3.3"
   },
   "dependencies": {
-    "@actions/core": "^1.4.0",
-    "@actions/github": "^5.0.0",
-    "@octokit/webhooks-types": "^3.77.1",
-    "fast-glob": "^3.2.5",
-    "semver": "^7.3.5",
-    "tslib": "^2.3.0"
+    "@actions/core": "~1.10.1",
+    "@actions/github": "~6.0.0",
+    "@octokit/webhooks-types": "~7.3.1",
+    "fast-glob": "~3.3.2",
+    "semver": "~7.5.4"
   },
-  "eslintConfig": {
-    "root": true,
-    "extends": "@rocket.chat/eslint-config-alt/typescript",
-    "rules": {
-      "no-await-in-loop": "off"
-    }
-  },
-  "prettier": "@rocket.chat/prettier-config/fuselage"
+  "volta": {
+    "node": "20.10.0",
+    "yarn": "4.0.2"
+  }
 }

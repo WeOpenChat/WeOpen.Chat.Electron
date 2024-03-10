@@ -1,7 +1,10 @@
-import { URL } from 'url';
+import type { WebContents } from 'electron';
+import { app } from 'electron';
 
-import { app, WebContents } from 'electron';
-
+import {
+  electronBuilderJsonInformation,
+  packageJsonInformation,
+} from '../app/main/app';
 import { ServerUrlResolutionStatus } from '../servers/common';
 import { resolveServerUrl } from '../servers/main';
 import { select, dispatch } from '../store';
@@ -13,11 +16,12 @@ import { getRootWindow } from '../ui/main/rootWindow';
 import { getWebContentsByServerUrl } from '../ui/main/serverView';
 import { DEEP_LINKS_SERVER_FOCUSED, DEEP_LINKS_SERVER_ADDED } from './actions';
 
-const isRocketChatUrl = (parsedUrl: URL): boolean =>
-  parsedUrl.protocol === 'rocketchat:';
+const isDefinedProtocol = (parsedUrl: URL): boolean =>
+  parsedUrl.protocol === `${electronBuilderJsonInformation.protocol}:`;
 
-const isGoRocketChatUrl = (parsedUrl: URL): boolean =>
-  parsedUrl.protocol === 'https:' && parsedUrl.hostname === 'go.rocket.chat';
+const isGoUrlShortener = (parsedUrl: URL): boolean =>
+  parsedUrl.protocol === 'https:' &&
+  parsedUrl.hostname === packageJsonInformation.goUrlShortener;
 
 const parseDeepLink = (
   input: string
@@ -35,13 +39,13 @@ const parseDeepLink = (
     return null;
   }
 
-  if (isRocketChatUrl(url)) {
+  if (isDefinedProtocol(url)) {
     const action = url.hostname;
     const args = url.searchParams;
     return { action, args };
   }
 
-  if (isGoRocketChatUrl(url)) {
+  if (isGoUrlShortener(url)) {
     const action = url.pathname;
     const args = url.searchParams;
     return { action, args };
@@ -61,6 +65,8 @@ type AuthenticationParams = {
 type OpenRoomParams = {
   host: string;
   path?: string;
+  token?: string;
+  userId?: string;
 };
 
 type InviteParams = {
@@ -132,7 +138,12 @@ const performAuthentication = async ({
   });
 
 // https://developer.rocket.chat/rocket.chat/deeplink#channel-group-dm
-const performOpenRoom = async ({ host, path }: OpenRoomParams): Promise<void> =>
+const performOpenRoom = async ({
+  host,
+  path,
+  token,
+  userId,
+}: OpenRoomParams): Promise<void> =>
   performOnServer(host, async (serverUrl) => {
     if (!path) {
       return;
@@ -140,13 +151,28 @@ const performOpenRoom = async ({ host, path }: OpenRoomParams): Promise<void> =>
     if (!/^\/?(direct|group|channel|livechat)\/[0-9a-zA-Z-_.]+/.test(path)) {
       return;
     }
+    const url = new URL(path, serverUrl);
+    if (token && userId) {
+      url.searchParams.append('resumeToken', token);
+      url.searchParams.append('userId', userId);
+    }
+
     const webContents = await getWebContents(serverUrl);
-    webContents.loadURL(new URL(path, serverUrl).href);
+    webContents.loadURL(url.href);
   });
 
 const performInvite = async ({ host, path }: InviteParams): Promise<void> =>
   performOnServer(host, async (serverUrl) => {
     if (!/^invite\//.test(path)) {
+      return;
+    }
+    const webContents = await getWebContents(serverUrl);
+    webContents.loadURL(new URL(path, serverUrl).href);
+  });
+
+const performConference = async ({ host, path }: InviteParams): Promise<void> =>
+  performOnServer(host, async (serverUrl) => {
+    if (!/^conference\//.test(path)) {
       return;
     }
     const webContents = await getWebContents(serverUrl);
@@ -176,8 +202,10 @@ const processDeepLink = async (deepLink: string): Promise<void> => {
     case 'room': {
       const host = args.get('host') ?? undefined;
       const path = args.get('path') ?? undefined;
+      const token = args.get('token') ?? undefined;
+      const userId = args.get('userId') ?? undefined;
       if (host && path) {
-        await performOpenRoom({ host, path });
+        await performOpenRoom({ host, path, token, userId });
       }
       break;
     }
@@ -188,6 +216,16 @@ const processDeepLink = async (deepLink: string): Promise<void> => {
       if (host && path) {
         await performInvite({ host, path });
       }
+      break;
+    }
+
+    case 'conference': {
+      const host = args.get('host') ?? undefined;
+      const path = args.get('path') ?? undefined;
+      if (host && path) {
+        await performConference({ host, path });
+      }
+      break;
     }
   }
 };

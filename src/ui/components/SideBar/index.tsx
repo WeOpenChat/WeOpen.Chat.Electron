@@ -1,13 +1,11 @@
-import { parse } from 'url';
-
 import { Icon } from '@rocket.chat/fuselage';
-import React, { FC, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../store/actions';
-import { RootState } from '../../../store/rootReducer';
+import type { RootAction } from '../../../store/actions';
+import type { RootState } from '../../../store/rootReducer';
 import {
   SIDE_BAR_ADD_NEW_SERVER_CLICKED,
   SIDE_BAR_DOWNLOADS_BUTTON_CLICKED,
@@ -15,6 +13,7 @@ import {
 } from '../../actions';
 import { useServers } from '../hooks/useServers';
 import ServerButton from './ServerButton';
+import CustomTheme from './customTheme';
 import {
   Wrapper,
   Content,
@@ -27,7 +26,7 @@ import {
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useSorting } from './useSorting';
 
-export const SideBar: FC = () => {
+export const SideBar = () => {
   const servers = useServers();
 
   const isSideBarEnabled = useSelector(
@@ -40,6 +39,11 @@ export const SideBar: FC = () => {
   const isVisible = servers.length > 0 && isSideBarEnabled;
   const style = useMemo(
     () => servers.find(({ selected }) => selected)?.style || {},
+    [servers]
+  );
+
+  const customTheme = useMemo(
+    () => servers.find(({ selected }) => selected)?.customTheme || '',
     [servers]
   );
   const isEachShortcutVisible = useKeyboardShortcuts();
@@ -66,7 +70,12 @@ export const SideBar: FC = () => {
   const currentView = useSelector(({ currentView }: RootState) => currentView);
 
   return (
-    <Wrapper sideBarStyle={style} isVisible={isVisible}>
+    <Wrapper
+      className='rcx-sidebar--main'
+      sideBarStyle={style}
+      isVisible={isVisible}
+    >
+      <CustomTheme customTheme={customTheme} />
       <Content withWindowButtons={process.platform === 'darwin'}>
         <ServerList>
           {sortedServers.map((server, order) => (
@@ -75,7 +84,7 @@ export const SideBar: FC = () => {
               url={server.url}
               title={
                 server.title === 'Rocket.Chat' &&
-                parse(server.url).hostname !== 'open.rocket.chat'
+                new URL(server.url).hostname !== 'open.rocket.chat'
                   ? `${server.title} - ${server.url}`
                   : server.title ?? server.url
               }

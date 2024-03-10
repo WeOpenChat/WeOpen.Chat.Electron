@@ -2,18 +2,22 @@ import {
   Box,
   Button,
   Field,
+  FieldLabel,
+  FieldRow,
   Margins,
   Throbber,
   ToggleSwitch,
 } from '@rocket.chat/fuselage';
-import { useUniqueId, useAutoFocus } from '@rocket.chat/fuselage-hooks';
-import React, { useState, useEffect, FC, ChangeEvent } from 'react';
+import { useAutoFocus } from '@rocket.chat/fuselage-hooks';
+import type { ChangeEvent } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../store/actions';
-import { RootState } from '../../../store/rootReducer';
+import { packageJsonInformation } from '../../../app/main/app';
+import type { RootAction } from '../../../store/actions';
+import type { RootState } from '../../../store/rootReducer';
 import { UPDATES_CHECK_FOR_UPDATES_REQUESTED } from '../../../updates/actions';
 import {
   ABOUT_DIALOG_TOGGLE_UPDATE_ON_START,
@@ -22,9 +26,11 @@ import {
 import { Dialog } from '../Dialog';
 import { RocketChatLogo } from '../RocketChatLogo';
 
-const copyright = `© 2016-${new Date().getFullYear()}, Rocket.Chat`;
+const copyright = `© 2016-${new Date().getFullYear()}, ${
+  packageJsonInformation.productName
+}`;
 
-export const AboutDialog: FC = () => {
+export const AboutDialog = () => {
   const appVersion = useSelector(({ appVersion }: RootState) => appVersion);
   const doCheckForUpdatesOnStartup = useSelector(
     ({ doCheckForUpdatesOnStartup }: RootState) => doCheckForUpdatesOnStartup
@@ -62,7 +68,7 @@ export const AboutDialog: FC = () => {
   const [
     [checkingForUpdates, checkingForUpdatesMessage],
     setCheckingForUpdates,
-  ] = useState([false, null]);
+  ] = useState<[boolean, string | null]>([false, null]);
 
   useEffect(() => {
     if (updateError) {
@@ -114,7 +120,7 @@ export const AboutDialog: FC = () => {
   };
 
   const checkForUpdatesButtonRef = useAutoFocus(isVisible);
-  const checkForUpdatesOnStartupToggleSwitchId = useUniqueId();
+  const checkForUpdatesOnStartupToggleSwitchId = useId();
 
   return (
     <Dialog
@@ -128,7 +134,7 @@ export const AboutDialog: FC = () => {
           <Trans t={t} i18nKey='dialog.about.version'>
             Version:
             <Box is='span' fontScale='p2' style={{ userSelect: 'text' }}>
-              {{ version: appVersion }}
+              <>{{ version: appVersion }}</>
             </Box>
           </Trans>
         </Box>
@@ -138,7 +144,9 @@ export const AboutDialog: FC = () => {
             <Margins block='x8'>
               {!checkingForUpdates && (
                 <Button
-                  ref={checkForUpdatesButtonRef}
+                  ref={
+                    checkForUpdatesButtonRef as React.RefObject<HTMLButtonElement>
+                  }
                   primary
                   type='button'
                   disabled={checkingForUpdates}
@@ -164,17 +172,19 @@ export const AboutDialog: FC = () => {
                 </Box>
               )}
 
-              <Field.Row>
-                <ToggleSwitch
-                  id={checkForUpdatesOnStartupToggleSwitchId}
-                  checked={isCheckForUpdatesOnStartupChecked}
-                  disabled={!canSetCheckForUpdatesOnStartup}
-                  onChange={handleCheckForUpdatesOnStartCheckBoxChange}
-                />
-                <Field.Label htmlFor={checkForUpdatesOnStartupToggleSwitchId}>
-                  {t('dialog.about.checkUpdatesOnStart')}
-                </Field.Label>
-              </Field.Row>
+              <Field>
+                <FieldRow>
+                  <FieldLabel htmlFor={checkForUpdatesOnStartupToggleSwitchId}>
+                    {t('dialog.about.checkUpdatesOnStart')}
+                  </FieldLabel>
+                  <ToggleSwitch
+                    id={checkForUpdatesOnStartupToggleSwitchId}
+                    checked={isCheckForUpdatesOnStartupChecked}
+                    disabled={!canSetCheckForUpdatesOnStartup}
+                    onChange={handleCheckForUpdatesOnStartCheckBoxChange}
+                  />
+                </FieldRow>
+              </Field>
             </Margins>
           </Box>
         )}

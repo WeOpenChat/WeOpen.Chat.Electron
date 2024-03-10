@@ -1,6 +1,7 @@
-import { RocketChatDesktopAPI } from './servers/preload/api';
+import type { RocketChatDesktopAPI } from './servers/preload/api';
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   interface Window {
     RocketChatDesktop: RocketChatDesktopAPI;
   }
@@ -8,7 +9,33 @@ declare global {
 
 console.log('[Rocket.Chat Desktop] Injected.ts');
 
-const start = (): void => {
+const resolveWithExponentialBackoff = <T>(
+  fn: () => Promise<T>,
+  { maxRetries = 5, delay = 1000 } = {}
+) =>
+  new Promise<T>((resolve) => resolve(fn())).catch((error) => {
+    if (maxRetries === 0) {
+      throw error;
+    }
+    console.log(
+      '[Rocket.Chat Desktop] Inject resolveWithExponentialBackoff - retrying in 1 seconds'
+    );
+    return new Promise<T>((resolve) => {
+      setTimeout(() => {
+        resolve(
+          resolveWithExponentialBackoff(fn, {
+            maxRetries: maxRetries - 1,
+            delay: delay * 2,
+          })
+        );
+      }, delay);
+    });
+  });
+
+const tryRequire = <T = any>(path: string) =>
+  resolveWithExponentialBackoff<T>(() => window.require(path));
+
+const start = async () => {
   console.log('[Rocket.Chat Desktop] Injected.ts start fired');
   if (typeof window.require !== 'function') {
     console.log('[Rocket.Chat Desktop] window.require is not defined');
@@ -17,8 +44,9 @@ const start = (): void => {
     return;
   }
 
-  const { Info: serverInfo = {} } =
-    window.require('/app/utils/rocketchat.info') ?? {};
+  const { Info: serverInfo = {} } = await tryRequire(
+    '/app/utils/rocketchat.info'
+  );
 
   if (!serverInfo.version) {
     console.log('[Rocket.Chat Desktop] serverInfo.version is not defined');
@@ -29,14 +57,62 @@ const start = (): void => {
 
   window.RocketChatDesktop.setServerInfo(serverInfo);
 
-  const { Meteor } = window.require('meteor/meteor');
-  const { Session } = window.require('meteor/session');
-  const { Tracker } = window.require('meteor/tracker');
-  const { UserPresence } = window.require('meteor/konecty:user-presence');
-  const { settings } = window.require('/app/settings');
-  const { getUserPreference } = window.require('/app/utils');
+  function versionIsGreaterOrEqualsTo(
+    version1: string,
+    version2: string
+  ): boolean {
+    const v1 = version1.match(/\d+/g)?.map(Number) || [];
+    const v2 = version2.match(/\d+/g)?.map(Number) || [];
+
+    for (let i = 0; i < 3; i++) {
+      const n1 = v1[i] || 0;
+      const n2 = v2[i] || 0;
+
+      if (n1 > n2) {
+        return true;
+      }
+      if (n1 < n2) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  const userPresenceModulePath = versionIsGreaterOrEqualsTo(
+    serverInfo.version,
+    '6.3.0'
+  )
+    ? 'meteor/rocketchat:user-presence'
+    : 'meteor/konecty:user-presence';
+
+  const settingsModulePath = (() => {
+    // if (versionIsGreaterOrEqualsTo(serverInfo.version, '6.0.0'))
+    //   return '/app/settings/client';
+    if (versionIsGreaterOrEqualsTo(serverInfo.version, '5.0.0'))
+      return '/app/settings/client/index.ts';
+    return '/app/settings';
+  })();
+
+  const utilsModulePath = (() => {
+    // if (versionIsGreaterOrEqualsTo(serverInfo.version, '6.0.0'))
+    //   return '/app/utils/client';
+    if (versionIsGreaterOrEqualsTo(serverInfo.version, '5.0.0'))
+      return '/app/utils/client/index.ts';
+    return '/app/utils';
+  })();
+
+  const { Meteor } = await tryRequire('meteor/meteor');
+  const { Session } = await tryRequire('meteor/session');
+  const { Tracker } = await tryRequire('meteor/tracker');
+  const { UserPresence } = await tryRequire(userPresenceModulePath);
+  const { settings } = await tryRequire(settingsModulePath);
+  const { getUserPreference } = await tryRequire(utilsModulePath);
 
   window.RocketChatDesktop.setUrlResolver(Meteor.absoluteUrl);
+
+  navigator.clipboard.writeText = async (...args) =>
+    window.RocketChatDesktop.writeTextToClipboard(...args);
 
   Tracker.autorun(() => {
     const unread = Session.get('unread');
@@ -70,6 +146,7 @@ const start = (): void => {
           jitsiDomain.length > 0 &&
           url.includes(jitsiDomain)
         ) {
+          console.log('[Rocket.Chat Desktop] window.open for Jitsi fired');
           return open(url, 'Video Call', `scrollbars=true,${features}`);
         }
 
@@ -78,10 +155,35 @@ const start = (): void => {
     }
   });
 
-  Tracker.autorun(() => {
-    const { url, defaultUrl } = settings.get('Assets_background') || {};
+  if (!versionIsGreaterOrEqualsTo(serverInfo.version, '6.4.0')) {
+    Tracker.autorun(() => {
+      const { url, defaultUrl } = settings.get('Assets_background') || {};
+      window.RocketChatDesktop.setBackground(url || defaultUrl);
+    });
+  }
 
-    window.RocketChatDesktop.setBackground(url || defaultUrl);
+  Tracker.autorun(() => {
+    const userToken = Meteor._localStorage.getItem('Meteor.loginToken');
+    const userId = Meteor.userId();
+    const outlookCalendarEnabled = settings.get('Outlook_Calendar_Enabled');
+    const outlookExchangeUrl = settings.get('Outlook_Calendar_Exchange_Url');
+    if (!userToken || !userId || !outlookCalendarEnabled || !outlookExchangeUrl)
+      return;
+    window.RocketChatDesktop.setUserToken(userToken, userId);
+
+    window.RocketChatDesktop.setOutlookExchangeUrl(outlookExchangeUrl, userId);
+  });
+
+  Tracker.autorun(() => {
+    const userToken = Meteor._localStorage.getItem('Meteor.loginToken');
+    const userId = Meteor.userId();
+    const outlookCalendarEnabled = settings.get('Outlook_Calendar_Enabled');
+    const outlookExchangeUrl = settings.get('Outlook_Calendar_Exchange_Url');
+    if (!userToken || !userId || !outlookCalendarEnabled || !outlookExchangeUrl)
+      return;
+    window.RocketChatDesktop.setUserToken(userToken, userId);
+
+    window.RocketChatDesktop.setOutlookExchangeUrl(outlookExchangeUrl, userId);
   });
 
   Tracker.autorun(() => {
@@ -98,6 +200,21 @@ const start = (): void => {
     const { gitCommitHash } = Meteor;
     if (!gitCommitHash) return;
     window.RocketChatDesktop.setGitCommitHash(gitCommitHash);
+  });
+
+  Tracker.autorun(() => {
+    const uid = Meteor.userId();
+    if (!uid) return;
+    const themeAppearance: string = getUserPreference(uid, 'themeAppearence');
+    if (
+      ['dark', 'light', 'auto', 'high-contrast'].includes(
+        themeAppearance as any
+      )
+    ) {
+      window.RocketChatDesktop.setUserThemeAppearance(
+        themeAppearance as 'auto' | 'dark' | 'light' | 'high-contrast'
+      );
+    }
   });
 
   Tracker.autorun(() => {
@@ -254,8 +371,8 @@ const start = (): void => {
       });
     }
   };
-};
 
-console.log('[Rocket.Chat Desktop] Injected');
+  console.log('[Rocket.Chat Desktop] Injected');
+};
 
 start();

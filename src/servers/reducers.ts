@@ -1,8 +1,9 @@
-import { Reducer } from 'redux';
+import type { Reducer } from 'redux';
 
 import { APP_SETTINGS_LOADED } from '../app/actions';
 import { DEEP_LINKS_SERVER_ADDED } from '../deepLinks/actions';
-import { ActionOf } from '../store/actions';
+import { OUTLOOK_CALENDAR_SAVE_CREDENTIALS } from '../outlookCalendar/actions';
+import type { ActionOf } from '../store/actions';
 import {
   ADD_SERVER_VIEW_SERVER_ADDED,
   SIDE_BAR_REMOVE_SERVER_CLICKED,
@@ -19,9 +20,16 @@ import {
   WEBVIEW_ATTACHED,
   WEBVIEW_GIT_COMMIT_HASH_CHANGED,
   WEBVIEW_ALLOWED_REDIRECTS_CHANGED,
+  WEBVIEW_SERVER_SUPPORTED_VERSIONS_UPDATED,
+  WEBVIEW_SERVER_UNIQUE_ID_UPDATED,
+  WEBVIEW_SERVER_IS_SUPPORTED_VERSION,
+  WEBVIEW_SERVER_VERSION_UPDATED,
+  SUPPORTED_VERSION_DIALOG_DISMISS,
+  WEBVIEW_SIDEBAR_CUSTOM_THEME_CHANGED,
+  WEBVIEW_USER_THEME_APPEARANCE_CHANGED,
 } from '../ui/actions';
-import { SERVERS_LOADED } from './actions';
-import { Server } from './common';
+import { SERVERS_LOADED, SERVER_DOCUMENT_VIEWER_OPEN_URL } from './actions';
+import type { Server } from './common';
 
 const ensureUrlFormat = (serverUrl: string | null): string => {
   if (serverUrl) {
@@ -39,6 +47,7 @@ type ServersActionTypes =
   | ActionOf<typeof SIDE_BAR_SERVERS_SORTED>
   | ActionOf<typeof WEBVIEW_DID_NAVIGATE>
   | ActionOf<typeof WEBVIEW_SIDEBAR_STYLE_CHANGED>
+  | ActionOf<typeof WEBVIEW_SIDEBAR_CUSTOM_THEME_CHANGED>
   | ActionOf<typeof WEBVIEW_GIT_COMMIT_HASH_CHANGED>
   | ActionOf<typeof WEBVIEW_TITLE_CHANGED>
   | ActionOf<typeof WEBVIEW_UNREAD_CHANGED>
@@ -49,7 +58,15 @@ type ServersActionTypes =
   | ActionOf<typeof WEBVIEW_DID_START_LOADING>
   | ActionOf<typeof WEBVIEW_DID_FAIL_LOAD>
   | ActionOf<typeof WEBVIEW_READY>
-  | ActionOf<typeof WEBVIEW_ATTACHED>;
+  | ActionOf<typeof WEBVIEW_ATTACHED>
+  | ActionOf<typeof OUTLOOK_CALENDAR_SAVE_CREDENTIALS>
+  | ActionOf<typeof WEBVIEW_SERVER_SUPPORTED_VERSIONS_UPDATED>
+  | ActionOf<typeof WEBVIEW_SERVER_UNIQUE_ID_UPDATED>
+  | ActionOf<typeof WEBVIEW_SERVER_IS_SUPPORTED_VERSION>
+  | ActionOf<typeof WEBVIEW_SERVER_VERSION_UPDATED>
+  | ActionOf<typeof SUPPORTED_VERSION_DIALOG_DISMISS>
+  | ActionOf<typeof SERVER_DOCUMENT_VIEWER_OPEN_URL>
+  | ActionOf<typeof WEBVIEW_USER_THEME_APPEARANCE_CHANGED>;
 
 const upsert = (state: Server[], server: Server): Server[] => {
   const index = state.findIndex(({ url }) => url === server.url);
@@ -103,6 +120,40 @@ export const servers: Reducer<Server[], ServersActionTypes> = (
       return upsert(state, { url, title });
     }
 
+    case WEBVIEW_SERVER_SUPPORTED_VERSIONS_UPDATED: {
+      const { url, supportedVersions, source } = action.payload;
+      return upsert(state, {
+        url,
+        supportedVersions,
+        supportedVersionsSource: source,
+      });
+    }
+
+    case SUPPORTED_VERSION_DIALOG_DISMISS: {
+      const { url } = action.payload;
+      return upsert(state, { url, expirationMessageLastTimeShown: new Date() });
+    }
+
+    case WEBVIEW_SERVER_UNIQUE_ID_UPDATED: {
+      const { url, uniqueID } = action.payload;
+      return upsert(state, { url, uniqueID });
+    }
+
+    case WEBVIEW_USER_THEME_APPEARANCE_CHANGED: {
+      const { url, themeAppearance } = action.payload;
+      return upsert(state, { url, themeAppearance });
+    }
+
+    case WEBVIEW_SERVER_IS_SUPPORTED_VERSION: {
+      const { url, isSupportedVersion } = action.payload;
+      return upsert(state, { url, isSupportedVersion });
+    }
+
+    case WEBVIEW_SERVER_VERSION_UPDATED: {
+      const { url, version } = action.payload;
+      return upsert(state, { url, version });
+    }
+
     case WEBVIEW_UNREAD_CHANGED: {
       const { url, badge } = action.payload;
       return upsert(state, { url, badge });
@@ -121,6 +172,11 @@ export const servers: Reducer<Server[], ServersActionTypes> = (
     case WEBVIEW_SIDEBAR_STYLE_CHANGED: {
       const { url, style } = action.payload;
       return upsert(state, { url, style });
+    }
+
+    case WEBVIEW_SIDEBAR_CUSTOM_THEME_CHANGED: {
+      const { url, customTheme } = action.payload;
+      return upsert(state, { url, customTheme });
     }
 
     case WEBVIEW_GIT_COMMIT_HASH_CHANGED: {
@@ -158,7 +214,7 @@ export const servers: Reducer<Server[], ServersActionTypes> = (
 
     case SERVERS_LOADED: {
       const { servers = state } = action.payload;
-      return servers.map((server) => ({
+      return servers.map((server: Server) => ({
         ...server,
         url: ensureUrlFormat(server.url),
       }));
@@ -166,9 +222,10 @@ export const servers: Reducer<Server[], ServersActionTypes> = (
 
     case APP_SETTINGS_LOADED: {
       const { servers = state } = action.payload;
-      return servers.map((server) => ({
+      return servers.map((server: Server) => ({
         ...server,
         url: ensureUrlFormat(server.url),
+        documentViewerOpenUrl: '',
       }));
     }
 
@@ -180,6 +237,16 @@ export const servers: Reducer<Server[], ServersActionTypes> = (
     case WEBVIEW_ATTACHED: {
       const { url, webContentsId } = action.payload;
       return update(state, { url, webContentsId });
+    }
+
+    case OUTLOOK_CALENDAR_SAVE_CREDENTIALS: {
+      const { url, outlookCredentials } = action.payload;
+      return upsert(state, { url, outlookCredentials });
+    }
+
+    case SERVER_DOCUMENT_VIEWER_OPEN_URL: {
+      const { server, documentUrl } = action.payload;
+      return upsert(state, { url: server, documentViewerOpenUrl: documentUrl });
     }
 
     default:

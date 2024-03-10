@@ -1,17 +1,26 @@
-import { ToggleSwitch, Field, Callout } from '@rocket.chat/fuselage';
-import React, { ChangeEvent, Dispatch, FC, useCallback } from 'react';
+import {
+  ToggleSwitch,
+  Field,
+  Callout,
+  FieldRow,
+  FieldLabel,
+  FieldHint,
+} from '@rocket.chat/fuselage';
+import type { ChangeEvent } from 'react';
+import { useCallback, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../../store/actions';
-import { RootState } from '../../../../store/rootReducer';
+import type { RootAction } from '../../../../store/actions';
+import type { RootState } from '../../../../store/rootReducer';
 import { SETTINGS_SET_FLASHFRAME_OPT_IN_CHANGED } from '../../../actions';
 
-type Props = {
+type FlashFrameProps = {
   className?: string;
 };
 
-export const FlashFrame: FC<Props> = (props) => {
+export const FlashFrame = (props: FlashFrameProps) => {
   const isFlashFrameEnabled = useSelector(
     ({ isFlashFrameEnabled }: RootState) => isFlashFrameEnabled
   );
@@ -28,29 +37,35 @@ export const FlashFrame: FC<Props> = (props) => {
     [dispatch]
   );
 
+  const isFlashFrameEnabledId = useId();
+
   return (
     <Field className={props.className}>
-      <Field.Row>
-        <ToggleSwitch onChange={handleChange} checked={isFlashFrameEnabled} />
-        <Field.Label htmlFor='toggle-switch'>
+      <FieldRow>
+        <FieldLabel htmlFor={isFlashFrameEnabledId}>
           {process.platform !== 'darwin'
             ? t('settings.options.flashFrame.title')
             : t('settings.options.flashFrame.titleDarwin')}
-        </Field.Label>
-      </Field.Row>
+        </FieldLabel>
+        <ToggleSwitch
+          id={isFlashFrameEnabledId}
+          checked={isFlashFrameEnabled}
+          onChange={handleChange}
+        />
+      </FieldRow>
       {process.platform === 'linux' && (
         <Callout
           title={t('settings.options.flashFrame.onLinux')}
           type='warning'
         />
       )}
-      <Field.Row>
-        <Field.Hint>
+      <FieldRow>
+        <FieldHint>
           {process.platform !== 'darwin'
             ? t('settings.options.flashFrame.description')
             : t('settings.options.flashFrame.descriptionDarwin')}
-        </Field.Hint>
-      </Field.Row>
+        </FieldHint>
+      </FieldRow>
     </Field>
   );
 };

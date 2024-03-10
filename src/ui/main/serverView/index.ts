@@ -1,23 +1,26 @@
 import fs from 'fs';
 import path from 'path';
 
-import {
-  app,
+import type {
   BrowserWindow,
   ContextMenuParams,
-  dialog,
   Event,
   Input,
-  Menu,
   MenuItemConstructorOptions,
   Session,
-  shell,
-  systemPreferences,
   UploadFile,
   UploadRawData,
-  webContents,
   WebContents,
   WebPreferences,
+} from 'electron';
+import {
+  app,
+  clipboard,
+  dialog,
+  Menu,
+  shell,
+  systemPreferences,
+  webContents,
 } from 'electron';
 import i18next from 'i18next';
 
@@ -26,7 +29,7 @@ import { handleWillDownloadEvent } from '../../../downloads/main';
 import { handle } from '../../../ipc/main';
 import { CERTIFICATES_CLEARED } from '../../../navigation/actions';
 import { isProtocolAllowed } from '../../../navigation/main';
-import { Server } from '../../../servers/common';
+import type { Server } from '../../../servers/common';
 import { dispatch, listen, select } from '../../../store';
 import {
   LOADING_ERROR_VIEW_RELOAD_SERVER_CLICKED,
@@ -37,6 +40,7 @@ import {
   WEBVIEW_DID_NAVIGATE,
   WEBVIEW_DID_START_LOADING,
   WEBVIEW_ATTACHED,
+  WEBVIEW_SERVER_RELOADED,
 } from '../../actions';
 import { getRootWindow } from '../rootWindow';
 import { createPopupMenuForServerView } from './popupMenu';
@@ -75,6 +79,8 @@ const initializeServerWebContentsAfterAttach = (
   const webviewSession = guestWebContents.session;
 
   guestWebContents.addListener('destroyed', () => {
+    guestWebContents.removeAllListeners();
+    webviewSession.removeAllListeners();
     webContentsByServerUrl.delete(serverUrl);
 
     const canPurge = select(
@@ -173,6 +179,7 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
     webPreferences.nodeIntegrationInSubFrames = false;
     webPreferences.webSecurity = true;
     webPreferences.contextIsolation = true;
+    webPreferences.sandbox = false;
   };
 
   const handleDidAttachWebview = (
@@ -187,54 +194,50 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
       setupPreloadReload(webContents);
     }
 
-    webContents.addListener(
-      'new-window',
-      (
-        event,
-        url,
-        frameName,
-        disposition,
-        options,
-        _additionalFeatures,
-        referrer,
-        postBody
-      ) => {
-        event.preventDefault();
+    webContents.setWindowOpenHandler(({ url, frameName, disposition }) => {
+      if (
+        disposition === 'foreground-tab' ||
+        disposition === 'background-tab'
+      ) {
+        isProtocolAllowed(url).then((allowed) => {
+          if (!allowed) {
+            return { action: 'deny' };
+          }
 
-        if (
-          disposition === 'foreground-tab' ||
-          disposition === 'background-tab'
-        ) {
-          isProtocolAllowed(url).then((allowed) => {
-            if (!allowed) {
-              return;
-            }
+          shell.openExternal(url);
+          return { action: 'deny' };
+        });
+        return { action: 'deny' };
+      }
 
-            shell.openExternal(url);
-          });
-          return;
-        }
+      const isVideoCall = frameName === 'Video Call';
 
-        const isVideoCall = frameName === 'Video Call';
-
-        const newWindow = new BrowserWindow({
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
           ...(isVideoCall
             ? {
                 webPreferences: {
                   preload: path.join(app.getAppPath(), 'app/preload.js'),
+                  sandbox: false,
                 },
               }
-            : options),
+            : {}),
           show: false,
-        });
+        },
+      };
+    });
 
-        newWindow.once('ready-to-show', () => {
-          newWindow.show();
+    webContents.addListener(
+      'did-create-window',
+      (window, { url, frameName, disposition, referrer, postBody }) => {
+        window.once('ready-to-show', () => {
+          window.show();
         });
 
         isProtocolAllowed(url).then((allowed) => {
           if (!allowed) {
-            newWindow.destroy();
+            window.destroy();
             return;
           }
 
@@ -243,7 +246,7 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
             disposition === 'new-window' &&
             new URL(url).hostname.match(/(\.)?google\.com$/);
 
-          newWindow.loadURL(url, {
+          window.loadURL(url, {
             userAgent: isGoogleSignIn
               ? app.userAgentFallback
                   .replace(`Electron/${process.versions.electron} `, '')
@@ -258,8 +261,6 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
             }),
           });
         });
-
-        event.newGuest = newWindow;
       }
     );
   };
@@ -309,7 +310,9 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
   };
 
   listen(WEBVIEW_READY, (action) => {
-    const guestWebContents = webContents.fromId(action.payload.webContentsId);
+    const guestWebContents = webContents.fromId(
+      action.payload.webContentsId
+    ) as WebContents;
     initializeServerWebContentsAfterReady(
       action.payload.url,
       guestWebContents,
@@ -322,8 +325,20 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
     guestWebContents.session.on(
       'will-download',
       (event, item, _webContents) => {
+        const fileName = item.getFilename();
+        const extension = path.extname(fileName)?.slice(1).toLowerCase();
         const savePath = dialog.showSaveDialogSync(rootWindow, {
           defaultPath: item.getFilename(),
+          filters: [
+            {
+              name: `*.${extension}`,
+              extensions: [extension],
+            },
+            {
+              name: '*.*',
+              extensions: ['*'],
+            },
+          ],
         });
         if (savePath !== undefined) {
           item.setSavePath(savePath);
@@ -352,7 +367,9 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
   });
 
   listen(WEBVIEW_ATTACHED, (action) => {
-    const guestWebContents = webContents.fromId(action.payload.webContentsId);
+    const guestWebContents = webContents.fromId(
+      action.payload.webContentsId
+    ) as WebContents;
     initializeServerWebContentsAfterAttach(
       action.payload.url,
       guestWebContents,
@@ -374,6 +391,12 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
         click: () => {
           const guestWebContents = getWebContentsByServerUrl(serverUrl);
           guestWebContents?.loadURL(serverUrl);
+          if (serverUrl) {
+            dispatch({
+              type: WEBVIEW_SERVER_RELOADED,
+              payload: { url: serverUrl },
+            });
+          }
         },
       },
       {
@@ -391,6 +414,14 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
         click: () => {
           const guestWebContents = getWebContentsByServerUrl(serverUrl);
           guestWebContents?.openDevTools();
+        },
+      },
+      {
+        label: t('sidebar.item.copyCurrentUrl'),
+        click: async () => {
+          const guestWebContents = getWebContentsByServerUrl(serverUrl);
+          const currentUrl = await guestWebContents?.getURL();
+          clipboard.writeText(currentUrl || '');
         },
       },
       {
@@ -451,5 +482,14 @@ export const attachGuestWebContentsEvents = async (): Promise<void> => {
     if (process.env.NODE_ENV === 'development') {
       injectableCode = undefined;
     }
+  });
+
+  handle('server-view/open-url-on-browser', async (_webContents, url) => {
+    const allowed = await isProtocolAllowed(url);
+    if (!allowed) {
+      return;
+    }
+
+    shell.openExternal(url);
   });
 };

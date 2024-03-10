@@ -1,17 +1,25 @@
-import { ToggleSwitch, Field } from '@rocket.chat/fuselage';
-import React, { ChangeEvent, Dispatch, FC, useCallback } from 'react';
+import {
+  ToggleSwitch,
+  Field,
+  FieldRow,
+  FieldLabel,
+  FieldHint,
+} from '@rocket.chat/fuselage';
+import type { ChangeEvent } from 'react';
+import { useCallback, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../../store/actions';
-import { RootState } from '../../../../store/rootReducer';
+import type { RootAction } from '../../../../store/actions';
+import type { RootState } from '../../../../store/rootReducer';
 import { SETTINGS_SET_MINIMIZE_ON_CLOSE_OPT_IN_CHANGED } from '../../../actions';
 
-type Props = {
+type MinimizeOnCloseProps = {
   className?: string;
 };
 
-export const MinimizeOnClose: FC<Props> = (props) => {
+export const MinimizeOnClose = (props: MinimizeOnCloseProps) => {
   const isMinimizeOnCloseEnabled = useSelector(
     ({ isMinimizeOnCloseEnabled }: RootState) => isMinimizeOnCloseEnabled
   );
@@ -31,23 +39,26 @@ export const MinimizeOnClose: FC<Props> = (props) => {
     [dispatch]
   );
 
+  const isMinimizeOnCloseEnabledId = useId();
+
   return (
     <Field className={props.className}>
-      <Field.Row>
-        <ToggleSwitch
-          disabled={isTrayIconEnabled}
-          onChange={handleChange}
-          checked={isMinimizeOnCloseEnabled}
-        />
-        <Field.Label htmlFor='toggle-switch'>
+      <FieldRow>
+        <FieldLabel htmlFor={isMinimizeOnCloseEnabledId}>
           {t('settings.options.minimizeOnClose.title')}
-        </Field.Label>
-      </Field.Row>
-      <Field.Row>
-        <Field.Hint>
+        </FieldLabel>
+        <ToggleSwitch
+          id={isMinimizeOnCloseEnabledId}
+          disabled={isTrayIconEnabled}
+          checked={isMinimizeOnCloseEnabled}
+          onChange={handleChange}
+        />
+      </FieldRow>
+      <FieldRow>
+        <FieldHint>
           {t('settings.options.minimizeOnClose.description')}
-        </Field.Hint>
-      </Field.Row>
+        </FieldHint>
+      </FieldRow>
     </Field>
   );
 };

@@ -1,5 +1,3 @@
-import React, { FC } from 'react';
-
 import { CertificatesManager } from '../CertificatesManager';
 
-export const CertificatesTab: FC = () => <CertificatesManager />;
+export const CertificatesTab = () => <CertificatesManager />;

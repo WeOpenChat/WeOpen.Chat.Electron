@@ -1,6 +1,6 @@
 export type FluxStandardAction<
   Type extends string = string,
-  Payload = void
+  Payload = void,
 > = void extends Payload
   ? {
       type: Type;
@@ -41,7 +41,7 @@ export const isRequest = <Action extends FluxStandardAction<string, unknown>>(
     .request === true;
 
 export const isLocallyScoped = <
-  Action extends FluxStandardAction<string, unknown>
+  Action extends FluxStandardAction<string, unknown>,
 >(
   action: Action
 ): action is Action & { meta: { scope: 'local' } } =>
@@ -49,7 +49,7 @@ export const isLocallyScoped = <
   (action as Action & { meta: { scope: unknown } }).meta.scope === 'local';
 
 export const isSingleScoped = <
-  Action extends FluxStandardAction<string, unknown>
+  Action extends FluxStandardAction<string, unknown>,
 >(
   action: Action
 ): action is Action & {
@@ -63,8 +63,8 @@ export const isErrored = <Action extends FluxStandardAction<string, unknown>>(
   action: Action
 ): action is Action & { error: true; payload: Error } =>
   'meta' in action &&
-  (action as Action & { error: unknown }).error === true &&
-  (action as Action & { payload: unknown }).payload instanceof Error;
+  (action as unknown as Action & { error: unknown }).error === true &&
+  (action as unknown as Action & { payload: unknown }).payload instanceof Error;
 
 export const hasPayload = <Action extends FluxStandardAction<string, unknown>>(
   action: Action
@@ -75,7 +75,7 @@ export const hasPayload = <Action extends FluxStandardAction<string, unknown>>(
 export const isResponseTo =
   <
     Action extends FluxStandardAction<string, unknown>,
-    Types extends [...string[]]
+    Types extends [...string[]],
   >(
     id: unknown,
     ...types: Types

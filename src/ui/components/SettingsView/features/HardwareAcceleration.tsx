@@ -1,17 +1,25 @@
-import { ToggleSwitch, Field } from '@rocket.chat/fuselage';
-import React, { ChangeEvent, Dispatch, FC, useCallback } from 'react';
+import {
+  ToggleSwitch,
+  Field,
+  FieldRow,
+  FieldLabel,
+  FieldHint,
+} from '@rocket.chat/fuselage';
+import type { ChangeEvent } from 'react';
+import { useCallback, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../../store/actions';
-import { RootState } from '../../../../store/rootReducer';
+import type { RootAction } from '../../../../store/actions';
+import type { RootState } from '../../../../store/rootReducer';
 import { SETTINGS_SET_HARDWARE_ACCELERATION_OPT_IN_CHANGED } from '../../../actions';
 
-type Props = {
+type HardwareAccelerationProps = {
   className?: string;
 };
 
-export const HardwareAcceleration: FC<Props> = (props) => {
+export const HardwareAcceleration = (props: HardwareAccelerationProps) => {
   const isHardwareAccelerationEnabled = useSelector(
     ({ isHardwareAccelerationEnabled }: RootState) =>
       isHardwareAccelerationEnabled
@@ -29,22 +37,25 @@ export const HardwareAcceleration: FC<Props> = (props) => {
     [dispatch]
   );
 
+  const isHardwareAccelerationEnabledId = useId();
+
   return (
     <Field className={props.className}>
-      <Field.Row>
-        <ToggleSwitch
-          onChange={handleChange}
-          checked={isHardwareAccelerationEnabled}
-        />
-        <Field.Label htmlFor='toggle-switch'>
+      <FieldRow>
+        <FieldLabel htmlFor={isHardwareAccelerationEnabledId}>
           {t('settings.options.hardwareAcceleration.title')}
-        </Field.Label>
-      </Field.Row>
-      <Field.Row>
-        <Field.Hint>
+        </FieldLabel>
+        <ToggleSwitch
+          id={isHardwareAccelerationEnabledId}
+          checked={isHardwareAccelerationEnabled}
+          onChange={handleChange}
+        />
+      </FieldRow>
+      <FieldRow>
+        <FieldHint>
           {t('settings.options.hardwareAcceleration.description')}
-        </Field.Hint>
-      </Field.Row>
+        </FieldHint>
+      </FieldRow>
     </Field>
   );
 };

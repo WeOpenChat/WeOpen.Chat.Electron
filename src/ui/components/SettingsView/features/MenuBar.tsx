@@ -1,17 +1,25 @@
-import { ToggleSwitch, Field } from '@rocket.chat/fuselage';
-import React, { ChangeEvent, Dispatch, FC, useCallback } from 'react';
+import {
+  ToggleSwitch,
+  Field,
+  FieldRow,
+  FieldLabel,
+  FieldHint,
+} from '@rocket.chat/fuselage';
+import type { ChangeEvent } from 'react';
+import { useCallback, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../../store/actions';
-import { RootState } from '../../../../store/rootReducer';
+import type { RootAction } from '../../../../store/actions';
+import type { RootState } from '../../../../store/rootReducer';
 import { SETTINGS_SET_IS_MENU_BAR_ENABLED_CHANGED } from '../../../actions';
 
-type Props = {
+type MenuBarProps = {
   className?: string;
 };
 
-export const MenuBar: FC<Props> = (props) => {
+export const MenuBar = (props: MenuBarProps) => {
   const isMenuBarEnabled = useSelector(
     ({ isMenuBarEnabled }: RootState) => isMenuBarEnabled
   );
@@ -28,17 +36,23 @@ export const MenuBar: FC<Props> = (props) => {
     [dispatch]
   );
 
+  const isMenuBarEnabledId = useId();
+
   return (
     <Field className={props.className}>
-      <Field.Row>
-        <ToggleSwitch onChange={handleChange} checked={isMenuBarEnabled} />
-        <Field.Label htmlFor='toggle-switch'>
+      <FieldRow>
+        <FieldLabel htmlFor={isMenuBarEnabledId}>
           {t('settings.options.menubar.title')}
-        </Field.Label>
-      </Field.Row>
-      <Field.Row>
-        <Field.Hint>{t('settings.options.menubar.description')}</Field.Hint>
-      </Field.Row>
+        </FieldLabel>
+        <ToggleSwitch
+          id={isMenuBarEnabledId}
+          checked={isMenuBarEnabled}
+          onChange={handleChange}
+        />
+      </FieldRow>
+      <FieldRow>
+        <FieldHint>{t('settings.options.menubar.description')}</FieldHint>
+      </FieldRow>
     </Field>
   );
 };

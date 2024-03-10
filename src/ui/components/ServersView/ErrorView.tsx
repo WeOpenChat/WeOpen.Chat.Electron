@@ -5,7 +5,7 @@ import {
   Margins,
   Throbber,
 } from '@rocket.chat/fuselage';
-import React, { useState, useEffect, FC } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { FailureImage } from '../FailureImage';
@@ -16,7 +16,7 @@ type ErrorViewProps = {
   onReload: () => void;
 };
 
-const ErrorView: FC<ErrorViewProps> = ({ isFailed, onReload }) => {
+const ErrorView = ({ isFailed, onReload }: ErrorViewProps) => {
   const { t } = useTranslation();
 
   const [isReloading, setReloading] = useState(false);
@@ -69,7 +69,7 @@ const ErrorView: FC<ErrorViewProps> = ({ isFailed, onReload }) => {
       />
       <Box
         is='section'
-        color='alternative'
+        color='pure-white'
         display='flex'
         flexDirection='column'
         justifyContent='center'

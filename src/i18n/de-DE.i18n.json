@@ -51,8 +51,7 @@
     "resetAppData": {
       "title": "Bist du dir sicher?",
       "yes": "Ja",
-      "cancel": "Abbrechen",
-      "no": "Nein"
+      "cancel": "Abbrechen"
     },
     "screenshare": {
       "title": "Bildschirm teilen",
@@ -102,11 +101,11 @@
       "yes": "Ja",
       "no": "Nein"
     },
-    "allowJitsiCaptureScreen": {
-      "title": "Jitsi versucht, Ihren Bildschirm zu erfassen",
-      "message": "Jitsi bittet um Erlaubnis, Ihren Bildschirm aufzunehmen.",
-      "detail": "Jitsi vom Server {{- url }} erfordert eine Erlaubnis, um Ihren Bildschirm mit anderen zu teilen.",
-      "dontAskAgain": "Erlauben Sie Jitsi von diesem Server immer, Ihren Bildschirm zu erfassen",
+    "allowVideoCallCaptureScreen": {
+      "title": "Der Videoanruf versucht, Ihren Bildschirm aufnehmen",
+      "message": "Der Videoanruf fragt nach der Erlaubnis, Ihren Bildschirm aufzunehmen.",
+      "detail": "Der Videoanrufserver {{- url }} benötigt die Erlaubnis, deinen Bildschirm mit anderen zu teilen.",
+      "dontAskAgain": "Lassen Sie immer zu, dass Videoanrufe von diesem Server Ihren Bildschirm erfassen",
       "yes": "Erlauben",
       "no": "Absagen"
     }
@@ -186,7 +185,7 @@
       },
       "internalVideoChatWindow": {
         "title": "Öffnen Sie den Video-Chat mit dem Anwendungsfenster",
-        "description": "Wenn eingestellt, wird der Video-Chat über das Fenster einer Anwendung geöffnet, andernfalls wird der Standardbrowser verwendet.",
+        "description": "Wenn diese Option aktiviert ist, wird der Video-Chat über ein Anwendungsfenster geöffnet, andernfalls wird der Standardbrowser verwendet. <strong> Der Freigabebildschirm von Google Meet </strong> wird in Electron-Anwendungen nicht unterstützt, daher ändert diese Konfiguration nicht das Verhalten von Meet-Anrufen, die im Browser geöffnet werden.",
         "masDescription": "Diese Option ist deaktiviert, wenn sie aus dem Mac App Store installiert wird. Aus Sicherheitsgründen wird der Video-Chat standardmäßig über den Browser geöffnet."
       },
       "minimizeOnClose": {

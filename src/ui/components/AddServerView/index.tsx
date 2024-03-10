@@ -3,24 +3,20 @@ import {
   ButtonGroup,
   Callout,
   Field,
+  FieldError,
   FieldGroup,
+  FieldLabel,
+  FieldRow,
   Margins,
   TextInput,
   Tile,
 } from '@rocket.chat/fuselage';
-import { useUniqueId, useAutoFocus } from '@rocket.chat/fuselage-hooks';
-import React, {
-  useCallback,
-  useEffect,
-  useState,
-  useMemo,
-  FC,
-  FormEvent,
-  ChangeEvent,
-} from 'react';
+import { useAutoFocus } from '@rocket.chat/fuselage-hooks';
+import type { FormEvent, ChangeEvent } from 'react';
+import { useCallback, useEffect, useState, useMemo, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
 
 import {
   SERVER_URL_RESOLVED,
@@ -28,15 +24,16 @@ import {
 } from '../../../servers/actions';
 import { ServerUrlResolutionStatus } from '../../../servers/common';
 import { request } from '../../../store';
-import { RootAction } from '../../../store/actions';
-import { RootState } from '../../../store/rootReducer';
+import type { RootAction } from '../../../store/actions';
+import type { RootState } from '../../../store/rootReducer';
+import * as urls from '../../../urls';
 import { ADD_SERVER_VIEW_SERVER_ADDED } from '../../actions';
 import { RocketChatLogo } from '../RocketChatLogo';
 import { Wrapper } from './styles';
 
-const defaultServerUrl = new URL('https://open.rocket.chat/');
+const defaultServerUrl = new URL(urls.open);
 
-export const AddServerView: FC = () => {
+export const AddServerView = () => {
   const isVisible = useSelector(
     ({ currentView }: RootState) => currentView === 'add-new-server'
   );
@@ -83,7 +80,7 @@ export const AddServerView: FC = () => {
   );
 
   const resolveServerUrl = useCallback(
-    async (serverUrl): Promise<void> => {
+    async (serverUrl: string): Promise<void> => {
       beginValidation();
 
       const [resolvedServerUrl, result] = await request(
@@ -150,7 +147,7 @@ export const AddServerView: FC = () => {
     };
   }, []);
 
-  const inputId = useUniqueId();
+  const inputId = useId();
   const inputRef = useAutoFocus(isVisible);
 
   if (!isVisible) {
@@ -173,22 +170,19 @@ export const AddServerView: FC = () => {
           </Margins>
           <FieldGroup>
             <Field>
-              <Field.Label htmlFor={inputId}>
-                {t('landing.inputUrl')}
-              </Field.Label>
-              <Field.Row>
+              <FieldLabel htmlFor={inputId}>{t('landing.inputUrl')}</FieldLabel>
+              <FieldRow>
                 <TextInput
-                  ref={inputRef}
+                  ref={inputRef as React.Ref<HTMLInputElement>}
                   id={inputId}
-                  error={errorMessage ?? undefined}
-                  type='text'
                   placeholder={defaultServerUrl.href}
-                  dir='auto'
+                  error={errorMessage ?? undefined}
                   value={input}
+                  dir='auto'
                   onChange={handleInputChange}
                 />
-              </Field.Row>
-              <Field.Error>{errorMessage}</Field.Error>
+              </FieldRow>
+              <FieldError>{errorMessage}</FieldError>
             </Field>
 
             <ButtonGroup align='center'>

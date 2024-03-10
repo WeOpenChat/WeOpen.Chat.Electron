@@ -1,5 +1,6 @@
 import { app } from 'electron';
-import i18next, { TFunction } from 'i18next';
+import type { TFunction } from 'i18next';
+import i18next from 'i18next';
 
 import { dispatch, Service } from '../store';
 import { hasMeta } from '../store/fsa';
@@ -16,7 +17,7 @@ const getLng = async (): Promise<keyof typeof resources | undefined> => {
 
   let [languageCode, countryCode] = locale.split(/[-_]/) as [
     string,
-    string | null
+    string | null,
   ];
   if (!languageCode || languageCode.length !== 2) {
     return fallbackLng;
@@ -39,9 +40,12 @@ const getLng = async (): Promise<keyof typeof resources | undefined> => {
   return undefined;
 };
 
+export let getLanguage = 'en';
+
 class I18nService extends Service {
   private async initializeAsync(): Promise<void> {
     const lng = await getLng();
+    getLanguage = lng || 'en';
 
     this.t = await i18next.init({
       lng,

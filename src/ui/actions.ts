@@ -1,5 +1,5 @@
-import { Server } from '../servers/common';
-import { RootWindowIcon, WindowState } from './common';
+import type { Server } from '../servers/common';
+import type { RootWindowIcon, WindowState } from './common';
 
 export const ABOUT_DIALOG_DISMISSED = 'about-dialog/dismissed';
 export const ABOUT_DIALOG_TOGGLE_UPDATE_ON_START =
@@ -57,12 +57,16 @@ export const WEBVIEW_SCREEN_SHARING_SOURCE_REQUESTED =
 export const WEBVIEW_SCREEN_SHARING_SOURCE_RESPONDED =
   'webview/screen-sharing-source-responded';
 export const WEBVIEW_SIDEBAR_STYLE_CHANGED = 'webview/sidebar-style-changed';
+export const WEBVIEW_SIDEBAR_CUSTOM_THEME_CHANGED =
+  'webview/sidebar-custom-theme-changed';
 export const WEBVIEW_GIT_COMMIT_HASH_CHANGED =
   'webview/git-commit-hash-changed';
 export const WEBVIEW_GIT_COMMIT_HASH_CHECK = 'webview/git-commit-hash-check';
 export const WEBVIEW_TITLE_CHANGED = 'webview/title-changed';
 export const WEBVIEW_UNREAD_CHANGED = 'webview/unread-changed';
 export const WEBVIEW_USER_LOGGED_IN = 'webview/user-loggedin';
+export const WEBVIEW_USER_THEME_APPEARANCE_CHANGED =
+  'webview/user-theme-appearance-changed';
 export const WEBVIEW_ALLOWED_REDIRECTS_CHANGED =
   'webview/allowed-redirects-changed';
 export const SETTINGS_SET_REPORT_OPT_IN_CHANGED =
@@ -81,8 +85,24 @@ export const SETTINGS_SET_IS_SIDE_BAR_ENABLED_CHANGED =
   'settings/set-is-side-bar-enabled-changed';
 export const SETTINGS_SET_IS_MENU_BAR_ENABLED_CHANGED =
   'settings/set-is-menu-bar-enabled-changed';
+export const SETTINGS_CLEAR_PERMITTED_SCREEN_CAPTURE_PERMISSIONS =
+  'settings/clear-permitted-screen-capture-permissions';
+export const SETTINGS_NTLM_CREDENTIALS_CHANGED =
+  'settings/ntlm-credentials-changed';
 export const SET_HAS_TRAY_MINIMIZE_NOTIFICATION_SHOWN =
   'notifications/set-has-tray-minimize-notification-shown';
+export const VIDEO_CALL_WINDOW_OPEN_URL = 'video-call-window/open-url';
+export const DOWNLOADS_BACK_BUTTON_CLICKED = 'downloads/back-button-clicked';
+export const WEBVIEW_SERVER_SUPPORTED_VERSIONS_UPDATED =
+  'webview/server-supported-versions-updated';
+export const WEBVIEW_SERVER_UNIQUE_ID_UPDATED =
+  'webview/server-workspace-uid-updated';
+export const WEBVIEW_SERVER_IS_SUPPORTED_VERSION =
+  'webview/server-is-supported-version';
+export const WEBVIEW_SERVER_VERSION_UPDATED = 'webview/version-updated';
+export const SUPPORTED_VERSION_DIALOG_DISMISS =
+  'supported-versions-dialog/dismiss';
+export const WEBVIEW_SERVER_RELOADED = 'webview/server-reloaded';
 
 export type UiActionTypeToPayloadMap = {
   [ABOUT_DIALOG_DISMISSED]: void;
@@ -131,11 +151,19 @@ export type UiActionTypeToPayloadMap = {
     url: Server['url'];
     style: Server['style'];
   };
+  [WEBVIEW_SIDEBAR_CUSTOM_THEME_CHANGED]: {
+    url: Server['url'];
+    customTheme: Server['customTheme'];
+  };
   [WEBVIEW_TITLE_CHANGED]: { url: Server['url']; title: Server['title'] };
   [WEBVIEW_UNREAD_CHANGED]: { url: Server['url']; badge: Server['badge'] };
   [WEBVIEW_USER_LOGGED_IN]: {
     url: Server['url'];
     userLoggedIn: Server['userLoggedIn'];
+  };
+  [WEBVIEW_USER_THEME_APPEARANCE_CHANGED]: {
+    url: Server['url'];
+    themeAppearance: Server['themeAppearance'];
   };
   [WEBVIEW_GIT_COMMIT_HASH_CHECK]: {
     url: Server['url'];
@@ -157,5 +185,30 @@ export type UiActionTypeToPayloadMap = {
   [SETTINGS_SET_IS_TRAY_ICON_ENABLED_CHANGED]: boolean;
   [SETTINGS_SET_IS_SIDE_BAR_ENABLED_CHANGED]: boolean;
   [SETTINGS_SET_IS_MENU_BAR_ENABLED_CHANGED]: boolean;
+  [SETTINGS_CLEAR_PERMITTED_SCREEN_CAPTURE_PERMISSIONS]: void;
   [SET_HAS_TRAY_MINIMIZE_NOTIFICATION_SHOWN]: boolean;
+  [SETTINGS_NTLM_CREDENTIALS_CHANGED]: boolean;
+  [VIDEO_CALL_WINDOW_OPEN_URL]: { url: string };
+  [DOWNLOADS_BACK_BUTTON_CLICKED]: string;
+  [WEBVIEW_SERVER_SUPPORTED_VERSIONS_UPDATED]: {
+    url: Server['url'];
+    supportedVersions: Server['supportedVersions'];
+    source: Server['supportedVersionsSource'];
+  };
+  [WEBVIEW_SERVER_UNIQUE_ID_UPDATED]: {
+    url: Server['url'];
+    uniqueID: Server['uniqueID'];
+  };
+  [WEBVIEW_SERVER_IS_SUPPORTED_VERSION]: {
+    url: Server['url'];
+    isSupportedVersion: Server['isSupportedVersion'];
+  };
+  [WEBVIEW_SERVER_VERSION_UPDATED]: {
+    url: Server['url'];
+    version: Server['version'];
+  };
+  [SUPPORTED_VERSION_DIALOG_DISMISS]: { url: Server['url'] };
+  [WEBVIEW_SERVER_RELOADED]: {
+    url: Server['url'];
+  };
 };

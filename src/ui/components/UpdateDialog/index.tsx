@@ -5,13 +5,13 @@ import {
   Chevron,
   Margins,
 } from '@rocket.chat/fuselage';
-import React, { useEffect, useRef, FC } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../store/actions';
-import { RootState } from '../../../store/rootReducer';
+import type { RootAction } from '../../../store/actions';
+import type { RootState } from '../../../store/rootReducer';
 import {
   UPDATE_DIALOG_SKIP_UPDATE_CLICKED,
   UPDATE_DIALOG_REMIND_UPDATE_LATER_CLICKED,
@@ -20,7 +20,7 @@ import {
 } from '../../actions';
 import { Dialog } from '../Dialog';
 
-export const UpdateDialog: FC = () => {
+export const UpdateDialog = () => {
   const currentVersion = useSelector(({ appVersion }: RootState) => appVersion);
   const newVersion = useSelector(
     ({ newUpdateVersion }: RootState) => newUpdateVersion
@@ -32,7 +32,7 @@ export const UpdateDialog: FC = () => {
 
   const { t } = useTranslation();
 
-  const installButtonRef = useRef<HTMLButtonElement>();
+  const installButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!isVisible) {

@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-import { app, WebContents } from 'electron';
+import type { WebContents } from 'electron';
+import { app } from 'electron';
 
 export const setUserDataDirectory = (): void => {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== 'development' || process.mas) {
     return;
   }
 
@@ -13,6 +14,7 @@ export const setUserDataDirectory = (): void => {
     fs.mkdirSync(folder, { recursive: true });
   }
 
+  console.log(`Setting user data directory to ${folder}`);
   app.setPath('userData', folder);
 };
 

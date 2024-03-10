@@ -1,4 +1,5 @@
-import { dialog, BrowserWindow } from 'electron';
+import type { BrowserWindow } from 'electron';
+import { dialog } from 'electron';
 import i18next from 'i18next';
 
 import { getRootWindow } from './rootWindow';
@@ -196,16 +197,16 @@ export const askForJitsiCaptureScreenPermission = async (
     {
       type: 'warning',
       buttons: [
-        t('dialog.allowJitsiCaptureScreen.yes'),
-        t('dialog.allowJitsiCaptureScreen.no'),
+        t('dialog.allowVideoCallCaptureScreen.yes'),
+        t('dialog.allowVideoCallCaptureScreen.no'),
       ],
       defaultId: 1,
-      title: t('dialog.allowJitsiCaptureScreen.title'),
-      message: t('dialog.allowJitsiCaptureScreen.message'),
-      detail: t('dialog.allowJitsiCaptureScreen.detail', {
+      title: t('dialog.allowVideoCallCaptureScreen.title'),
+      message: t('dialog.allowVideoCallCaptureScreen.message'),
+      detail: t('dialog.allowVideoCallCaptureScreen.detail', {
         url: url.toString(),
       }),
-      checkboxLabel: t('dialog.allowJitsiCaptureScreen.dontAskAgain'),
+      checkboxLabel: t('dialog.allowVideoCallCaptureScreen.dontAskAgain'),
       checkboxChecked: false,
     }
   );
@@ -214,4 +215,26 @@ export const askForJitsiCaptureScreenPermission = async (
     allowed: response === 0,
     dontAskAgain: checkboxChecked,
   };
+};
+
+export const askForClearScreenCapturePermission = async (
+  parentWindow?: BrowserWindow
+): Promise<boolean> => {
+  parentWindow?.show();
+
+  const { response } = await dialog.showMessageBox(
+    parentWindow ?? (await getRootWindow()),
+    {
+      type: 'question',
+      buttons: [
+        t('dialog.clearPermittedScreenCaptureServers.yes'),
+        t('dialog.clearPermittedScreenCaptureServers.cancel'),
+      ],
+      defaultId: 1,
+      title: t('dialog.clearPermittedScreenCaptureServers.title'),
+      message: t('dialog.clearPermittedScreenCaptureServers.message'),
+    }
+  );
+
+  return response === 0;
 };

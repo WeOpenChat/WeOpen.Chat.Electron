@@ -1,13 +1,11 @@
-import React, { FC } from 'react';
-
-import { Server } from '../../servers/common';
+import type { Server } from '../../servers/common';
 
 type BadgeProps = {
   value: Server['badge'];
   backgroundColor?: string;
 };
 
-const Badge: FC<BadgeProps> = ({ value, backgroundColor = '#F5455C' }) => {
+const Badge = ({ value, backgroundColor = '#F5455C' }: BadgeProps) => {
   const color = '#FFFFFF';
 
   return (

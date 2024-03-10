@@ -1,11 +1,9 @@
 import { Box } from '@rocket.chat/fuselage';
-import React, { AllHTMLAttributes, FC } from 'react';
+import type { AllHTMLAttributes } from 'react';
 
-type ActionButtonProps = {
-  onClick: AllHTMLAttributes<HTMLAnchorElement>['onClick'];
-};
+type ActionButtonProps = AllHTMLAttributes<HTMLAnchorElement>;
 
-const ActionButton: FC<ActionButtonProps> = (props) => (
+const ActionButton = (props: ActionButtonProps) => (
   <>
     <Box marginInline={4} withRichContent>
       <a href='#' {...props} />

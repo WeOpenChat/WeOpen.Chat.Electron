@@ -1,13 +1,19 @@
-import { Reducer } from 'redux';
+import type { Reducer } from 'redux';
 
 import {
   CERTIFICATES_CLIENT_CERTIFICATE_REQUESTED,
   SELECT_CLIENT_CERTIFICATE_DIALOG_CERTIFICATE_SELECTED,
   SELECT_CLIENT_CERTIFICATE_DIALOG_DISMISSED,
 } from '../../navigation/actions';
+import {
+  OUTLOOK_CALENDAR_DIALOG_DISMISSED,
+  OUTLOOK_CALENDAR_ASK_CREDENTIALS,
+  OUTLOOK_CALENDAR_SET_CREDENTIALS,
+} from '../../outlookCalendar/actions';
 import { SCREEN_SHARING_DIALOG_DISMISSED } from '../../screenSharing/actions';
-import { ActionOf } from '../../store/actions';
+import type { ActionOf } from '../../store/actions';
 import { UPDATES_NEW_VERSION_AVAILABLE } from '../../updates/actions';
+import type { SUPPORTED_VERSION_DIALOG_DISMISS } from '../actions';
 import {
   ABOUT_DIALOG_DISMISSED,
   MENU_BAR_ABOUT_CLICKED,
@@ -32,7 +38,11 @@ type OpenDialogAction =
   | ActionOf<typeof UPDATE_DIALOG_SKIP_UPDATE_CLICKED>
   | ActionOf<typeof UPDATES_NEW_VERSION_AVAILABLE>
   | ActionOf<typeof WEBVIEW_SCREEN_SHARING_SOURCE_REQUESTED>
-  | ActionOf<typeof WEBVIEW_SCREEN_SHARING_SOURCE_RESPONDED>;
+  | ActionOf<typeof WEBVIEW_SCREEN_SHARING_SOURCE_RESPONDED>
+  | ActionOf<typeof OUTLOOK_CALENDAR_ASK_CREDENTIALS>
+  | ActionOf<typeof OUTLOOK_CALENDAR_DIALOG_DISMISSED>
+  | ActionOf<typeof OUTLOOK_CALENDAR_SET_CREDENTIALS>
+  | ActionOf<typeof SUPPORTED_VERSION_DIALOG_DISMISS>;
 
 export const openDialog: Reducer<string | null, OpenDialogAction> = (
   state = null,
@@ -57,6 +67,9 @@ export const openDialog: Reducer<string | null, OpenDialogAction> = (
       }
       return state;
 
+    case OUTLOOK_CALENDAR_ASK_CREDENTIALS:
+      return 'outlook-credentials';
+
     case SCREEN_SHARING_DIALOG_DISMISSED:
     case WEBVIEW_SCREEN_SHARING_SOURCE_RESPONDED:
     case SELECT_CLIENT_CERTIFICATE_DIALOG_CERTIFICATE_SELECTED:
@@ -65,6 +78,8 @@ export const openDialog: Reducer<string | null, OpenDialogAction> = (
     case UPDATE_DIALOG_SKIP_UPDATE_CLICKED:
     case UPDATE_DIALOG_REMIND_UPDATE_LATER_CLICKED:
     case UPDATE_DIALOG_INSTALL_BUTTON_CLICKED:
+    case OUTLOOK_CALENDAR_DIALOG_DISMISSED:
+    case OUTLOOK_CALENDAR_SET_CREDENTIALS:
       return null;
 
     default:

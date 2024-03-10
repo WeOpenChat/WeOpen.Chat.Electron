@@ -7,8 +7,10 @@ type WrapperProps = {
   sideBarStyle: {
     background?: string;
     color?: string;
+    border?: string;
   };
   isVisible: boolean;
+  customTheme?: string;
 };
 
 export const Wrapper = styled.div<WrapperProps>`
@@ -22,16 +24,21 @@ export const Wrapper = styled.div<WrapperProps>`
   user-select: none;
   -webkit-app-region: drag;
 
-  transition: margin-inline-start 230ms ease-in-out,
+  transition:
+    margin-inline-start 230ms ease-in-out,
     visibility 230ms ease-in-out;
 
-  ${({ sideBarStyle: { background } }) =>
+  ${({ sideBarStyle: { background } }) => css`
+    background: ${background ?? '#2f343d'};
+  `}
+  ${({ sideBarStyle: { color } }) => css`
+    color: ${color ?? '#ffffff'};
+  `}
+
+  ${({ sideBarStyle: { border } }) =>
+    border &&
     css`
-      background: ${background ?? '#2f343d'};
-    `}
-  ${({ sideBarStyle: { color } }) =>
-    css`
-      color: ${color ?? '#ffffff'};
+      border-right: ${border ?? 'none'};
     `}
 	${({ isVisible }) =>
     !isVisible &&
@@ -39,6 +46,7 @@ export const Wrapper = styled.div<WrapperProps>`
       margin-inline-start: -68px;
       visibility: hidden;
     `}
+  ${({ customTheme }) => customTheme}
 `;
 
 type ContentProps = {
@@ -50,7 +58,6 @@ export const Content = styled.div<ContentProps>`
   flex-direction: column;
   flex: 1 1 0;
   padding-top: 10px;
-  background-color: rgba(0, 0, 0, 0.1);
   align-items: stretch;
 
   ${({ withWindowButtons }) =>
@@ -90,38 +97,14 @@ export const ServerButtonWrapper = styled.li<ServerButtonWrapperProps>`
   align-items: center;
   flex-flow: row wrap;
   justify-content: space-between;
+  margin-left: 14px;
+  margin-right: 12px;
 
   ${({ isDragged }) =>
     isDragged &&
     css`
       opacity: 0.5;
     `}
-
-  &::before {
-    flex: 0 0 auto;
-    width: 5px;
-    height: 0;
-    margin-right: -5px;
-    content: '';
-    transition: height var(--transitions-duration),
-      opacity var(--transitions-duration);
-    border-radius: 0 3px 3px 0;
-    background-color: #ffffff;
-
-    ${({ hasUnreadMessages }) =>
-      hasUnreadMessages &&
-      css`
-        height: 6px;
-        opacity: 0.6;
-      `}
-
-    ${({ isSelected }) =>
-      isSelected &&
-      css`
-        height: 30px;
-        opacity: 1;
-      `}
-  }
 
   ${withTooltip}
 `;
@@ -136,10 +119,9 @@ export const KeyboardShortcut = styled.div<KeyboardShortcutProps>`
   text-align: center;
   font-size: 12px;
   line-height: 1;
-  ${({ visible }) =>
-    css`
-      visibility: ${visible ? 'visible' : 'hidden'};
-    `}
+  ${({ visible }) => css`
+    visibility: ${visible ? 'visible' : 'hidden'};
+  `}
 `;
 
 type InitialsProps = {
@@ -149,10 +131,9 @@ type InitialsProps = {
 export const Initials = styled.span<InitialsProps>`
   line-height: 42px;
 
-  ${({ visible }) =>
-    css`
-      display: ${visible ? 'initial' : 'none'};
-    `}
+  ${({ visible }) => css`
+    display: ${visible ? 'initial' : 'none'};
+  `}
 `;
 
 type FaviconProps = {
@@ -163,10 +144,9 @@ export const Favicon = styled.img<FaviconProps>`
   max-width: 100%;
   height: 100%;
   object-fit: contain;
-  ${({ visible }) =>
-    css`
-      display: ${visible ? 'initial' : 'none'};
-    `}
+  ${({ visible }) => css`
+    display: ${visible ? 'initial' : 'none'};
+  `}
 `;
 
 type AvatarProps = {
@@ -182,37 +162,19 @@ export const Avatar = styled.span<AvatarProps>`
   height: 42px;
   transition: opacity var(--transitions-duration);
 
-  ${({ isSelected }) =>
-    css`
-      opacity: ${isSelected ? '1' : '0.6'};
-    `}
+  ${({ isSelected }) => css`
+    opacity: ${isSelected ? '1' : '0.6'};
+  `}
 
   &:hover {
-    ${({ isSelected }) =>
-      css`
-        opacity: ${isSelected ? '1' : '0.8'};
-      `}
+    ${({ isSelected }) => css`
+      opacity: ${isSelected ? '1' : '0.8'};
+    `}
   }
 `;
 
-export const Badge = styled.div`
-  position: absolute;
-  z-index: 1;
-  top: 2px;
-  right: 8px;
-  display: block;
-  min-width: 15px;
-  text-align: center;
-  color: #ffffff;
-  border-radius: 20px;
-  background-color: #e43325;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  font-size: 10px;
-  font-weight: bold;
-  line-height: 15px;
-`;
-
 export const AddServerButton = styled.button`
+  -webkit-app-region: no-drag;
   font-family: inherit;
   position: relative;
   flex: 0 0 auto;
@@ -259,6 +221,7 @@ type SidebarActionButtonProps = {
 };
 
 export const SidebarActionButton = styled.span<SidebarActionButtonProps>`
+  -webkit-app-region: no-drag;
   display: flex;
   justify-content: center;
   align-items: center;

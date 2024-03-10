@@ -54,6 +54,12 @@
       "yes": "Yes",
       "cancel": "Cancel"
     },
+    "clearPermittedScreenCaptureServers": {
+      "title": "Clear Permitted Screen Capture Servers",
+      "message": "This will clear all the permissions for screen capture servers, making them ask again for permission. This cannot be undone.",
+      "yes": "Yes",
+      "cancel": "Cancel"
+    },
     "screenshare": {
       "title": "Share Your Screen",
       "announcement": "Select a screen to share"
@@ -102,13 +108,25 @@
       "yes": "Yes",
       "no": "No"
     },
-    "allowJitsiCaptureScreen": {
-      "title": "Jitsi is trying to capture your screen",
-      "message": "Jitsi is requesting permission to capture your screen.",
-      "detail": "Jitsi from the server {{- url }} requires permission in order to share your screen with others.",
-      "dontAskAgain": "Always allow Jitsi from this server to capture your screen",
+    "allowVideoCallCaptureScreen": {
+      "title": "The video call is trying to capture your screen",
+      "message": "The video call is requesting permission to capture your screen.",
+      "detail": "The video call from the server {{- url }} requires permission in order to share your screen with others.",
+      "dontAskAgain": "Always allow video calls from this server to capture your screen",
       "yes": "Allow",
       "no": "Cancel"
+    },
+    "outlookCalendar": {
+      "title": "Outlook Calendar",
+      "encryptionUnavailableTitle": "Encryption unavailable",
+      "encryptionUnavailable": "Your operational system don't support encryption.\nYour credentials will be stored in plain text.",
+      "field_required": "This field is required",
+      "remember_credentials": "Remember my credentials",
+      "cancel": " Cancel",
+      "submit": "Login"
+    },
+    "supportedVersion": {
+      "title": "Workspace version unsupported"
     }
   },
   "downloads": {
@@ -186,7 +204,7 @@
       },
       "internalVideoChatWindow": {
         "title": "Open Video Chat using Application Window",
-        "description": "When set Video Chat will be opened using an application's window, otherwise the default browser will be used.",
+        "description": "When set Video Chat will be opened using an application's window, otherwise the default browser will be used. <strong>Google Meet</strong> share screen is not supported in Electron applications, so this configuration don't change Meet calls behavior, that will open on browser.",
         "masDescription": "This option is disabled when installed from the Mac App Store, for security reasons it will open Video Chat using the browser by default."
       },
       "minimizeOnClose": {
@@ -204,6 +222,19 @@
       "trayIcon": {
         "title": "Tray Icon",
         "description": "Show tray icon on the system tray. If tray icon is active the app will be hidden to tray on close. Otherwise it will quit the application."
+      },
+      "clearPermittedScreenCaptureServers": {
+        "title": "Clear Screen Capture Permissions",
+        "description": "Clear the screen capture permissions that was selected to not ask again on video calls."
+      },
+      "allowScreenCaptureOnVideoCalls": {
+        "title": "Allow Screen Capture on Video Calls",
+        "description": "Allow screen capture on video calls. This will ask for permission on each video call."
+      },
+      "ntlmCredentials": {
+        "title": "NTLM Credentials",
+        "description": "Allow NTLM Credentials to be used when connecting to a server.",
+        "domains": "Domains that will use the credentials. Separated by comma. Use * to match all domains."
       }
     }
   },
@@ -270,6 +301,11 @@
     "announcement": "Houston, we have a problem",
     "reload": "Reload"
   },
+  "unsupportedServer": {
+    "title": "{{instanceDomain}} is running an unsupported version of Rocket.Chat",
+    "announcement": "An admin needs to update the workspace to a supported version in order to reenable access from mobile and desktop apps.",
+    "moreInformation": "Learn more"
+  },
   "selfxss": {
     "title": "Stop!",
     "description": "This is a browser feature intended for developers. If someone told you to copy-paste something here to enable a Rocket.Chat feature or \"hack\" someone's account, it is a scam and will give them access to your Rocket.Chat account.",
@@ -284,7 +320,8 @@
       "remove": "Remove server",
       "openDevTools": "Open DevTools",
       "clearCache": "Clear Cache",
-      "clearStorageData": "Clear Storage Data"
+      "clearStorageData": "Clear Storage Data",
+      "copyCurrentUrl": "Copy current URL"
     }
   },
   "touchBar": {

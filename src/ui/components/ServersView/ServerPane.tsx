@@ -1,32 +1,46 @@
-import React, { useRef, useEffect, FC } from 'react';
+import { ipcRenderer } from 'electron';
+import { useRef, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Dispatch } from 'redux';
+import type { Dispatch } from 'redux';
 
-import { RootAction } from '../../../store/actions';
+import { SERVER_DOCUMENT_VIEWER_OPEN_URL } from '../../../servers/actions';
+import type { RootAction } from '../../../store/actions';
 import {
   LOADING_ERROR_VIEW_RELOAD_SERVER_CLICKED,
   WEBVIEW_ATTACHED,
   WEBVIEW_READY,
 } from '../../actions';
+import DocumentViewer from './DocumentViewer';
 import ErrorView from './ErrorView';
-import { StyledWebView, Wrapper } from './styles';
+import UnsupportedServer from './UnsupportedServer';
+import { DocumentViewerWrapper, StyledWebView, Wrapper } from './styles';
 
 type ServerPaneProps = {
   lastPath: string | undefined;
   serverUrl: string;
   isSelected: boolean;
   isFailed: boolean;
+  isSupported: boolean | undefined;
+  title: string | undefined;
+  documentViewerOpenUrl: string | undefined;
+  themeAppearance: string | undefined;
 };
 
-export const ServerPane: FC<ServerPaneProps> = ({
+export const ServerPane = ({
   lastPath,
   serverUrl,
   isSelected,
   isFailed,
-}) => {
+  isSupported,
+  documentViewerOpenUrl,
+  themeAppearance,
+}: ServerPaneProps) => {
   const dispatch = useDispatch<Dispatch<RootAction>>();
 
-  const webviewRef = useRef<ReturnType<typeof document['createElement']>>(null);
+  const [documentViewerActive, setDocumentViewerActive] = useState(false);
+
+  const webviewRef =
+    useRef<ReturnType<(typeof document)['createElement']>>(null);
 
   useEffect(() => {
     const webview = webviewRef.current;
@@ -68,13 +82,15 @@ export const ServerPane: FC<ServerPaneProps> = ({
 
     const handleAttachReady = (): void => {
       step &&
-        dispatch({
-          type: WEBVIEW_READY,
-          payload: {
-            url: serverUrl,
-            webContentsId: webview.getWebContentsId(),
-          },
-        });
+        setTimeout(() => {
+          dispatch({
+            type: WEBVIEW_READY,
+            payload: {
+              url: serverUrl,
+              webContentsId: webview.getWebContentsId(),
+            },
+          });
+        }, 300);
       step = true;
     };
     addEventListenerOnce('did-attach', handleAttachReady);
@@ -100,13 +116,15 @@ export const ServerPane: FC<ServerPaneProps> = ({
     };
 
     const handleAttachReady = (): void => {
-      dispatch({
-        type: WEBVIEW_ATTACHED,
-        payload: {
-          url: serverUrl,
-          webContentsId: webview.getWebContentsId(),
-        },
-      });
+      setTimeout(() => {
+        dispatch({
+          type: WEBVIEW_ATTACHED,
+          payload: {
+            url: serverUrl,
+            webContentsId: webview.getWebContentsId(),
+          },
+        });
+      }, 300);
     };
 
     addEventListenerOnce('did-attach', handleAttachReady);
@@ -127,6 +145,19 @@ export const ServerPane: FC<ServerPaneProps> = ({
     }
   }, [lastPath, serverUrl]);
 
+  useEffect(() => {
+    const webview = webviewRef.current;
+    if (!webview) {
+      return;
+    }
+
+    if (isSelected && documentViewerOpenUrl && documentViewerOpenUrl !== '') {
+      setDocumentViewerActive(true);
+    } else {
+      setDocumentViewerActive(false);
+    }
+  }, [documentViewerOpenUrl, isSelected]);
+
   const handleReload = (): void => {
     dispatch({
       type: LOADING_ERROR_VIEW_RELOAD_SERVER_CLICKED,
@@ -143,7 +174,28 @@ export const ServerPane: FC<ServerPaneProps> = ({
     } else {
       webview?.blur();
     }
+    // setDocumentViewerActive(true);
   }, [isSelected]);
+
+  const closeDocumentViewer = () => {
+    dispatch({
+      type: SERVER_DOCUMENT_VIEWER_OPEN_URL,
+      payload: { server: serverUrl, documentUrl: '' },
+    });
+    setDocumentViewerActive(false);
+  };
+
+  useEffect(() => {
+    const handleOnline = () => {
+      ipcRenderer.invoke('refresh-supported-versions', serverUrl);
+    };
+
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [serverUrl]);
 
   return (
     <Wrapper isVisible={isSelected}>
@@ -152,6 +204,18 @@ export const ServerPane: FC<ServerPaneProps> = ({
         isFailed={isFailed}
         partition={`persist:${serverUrl}`}
         {...({ allowpopups: 'allowpopups' } as any)}
+      />{' '}
+      <DocumentViewerWrapper isVisible={documentViewerActive}>
+        <DocumentViewer
+          url={documentViewerOpenUrl || ''}
+          partition={`persist:${serverUrl}`}
+          closeDocumentViewer={closeDocumentViewer}
+          themeAppearance={themeAppearance}
+        />
+      </DocumentViewerWrapper>
+      <UnsupportedServer
+        isSupported={isSupported}
+        instanceDomain={new URL(serverUrl).hostname}
       />
       <ErrorView isFailed={isFailed} onReload={handleReload} />
     </Wrapper>

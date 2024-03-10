@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import type { Release, ReleaseAsset } from '@octokit/webhooks-types';
@@ -11,7 +9,7 @@ const getRepoParams = () =>
   ({
     owner: core.getInput('repository_owner') || github.context.repo.owner,
     repo: core.getInput('repository_name') || github.context.repo.repo,
-  } as const);
+  }) as const;
 
 const octokit = github.getOctokit(core.getInput('github_token'));
 
@@ -35,7 +33,7 @@ const findRelease = async (filter: (release: any) => boolean) => {
 };
 
 const getChangelog = async () =>
-  (await runAndBuffer(`yarn --silent conventional-changelog -p angular`))
+  (await runAndBuffer(`yarn conventional-changelog -p angular`))
     .split('\n')
     .slice(1)
     .join('\n')

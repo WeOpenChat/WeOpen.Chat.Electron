@@ -2,16 +2,32 @@ import {
   createNotification,
   destroyNotification,
 } from '../../notifications/preload';
+import {
+  getOutlookEvents,
+  setOutlookExchangeUrl,
+  hasOutlookCredentials,
+  clearOutlookCredentials,
+  setUserToken,
+} from '../../outlookCalendar/preload';
+import type { OutlookEventsResponse } from '../../outlookCalendar/type';
 import { setUserPresenceDetection } from '../../userPresence/preload';
-import { Server } from '../common';
+import type { Server } from '../common';
 import { setBadge } from './badge';
+import { writeTextToClipboard } from './clipboard';
+import { openDocumentViewer } from './documentViewer';
 import { setFavicon } from './favicon';
 import { setGitCommitHash } from './gitCommitHash';
+import type { videoCallWindowOptions } from './internalVideoChatWindow';
 import {
   getInternalVideoChatWindowEnabled,
   openInternalVideoChatWindow,
 } from './internalVideoChatWindow';
-import { setBackground } from './sidebar';
+import {
+  setBackground,
+  setServerVersionToSidebar,
+  setSidebarCustomTheme,
+} from './sidebar';
+import { setUserThemeAppearance } from './themeAppearance';
 import { setTitle } from './title';
 import { setUrlResolver } from './urls';
 import { setUserLoggedIn } from './userLoggedIn';
@@ -30,6 +46,7 @@ export type RocketChatDesktopAPI = {
   setBadge: (badge: Server['badge']) => void;
   setFavicon: (faviconUrl: string) => void;
   setBackground: (imageUrl: string) => void;
+  setSidebarCustomTheme: (customTheme: string) => void;
   setTitle: (title: string) => void;
   setUserLoggedIn: (userLoggedIn: boolean) => void;
   setUserPresenceDetection: (options: {
@@ -37,6 +54,7 @@ export type RocketChatDesktopAPI = {
     idleThreshold: number | null;
     setUserOnline: (online: boolean) => void;
   }) => void;
+  setUserThemeAppearance: (themeAppearance: Server['themeAppearance']) => void;
   createNotification: (
     options: NotificationOptions & {
       canReply?: boolean;
@@ -46,8 +64,18 @@ export type RocketChatDesktopAPI = {
   ) => Promise<unknown>;
   destroyNotification: (id: unknown) => void;
   getInternalVideoChatWindowEnabled: () => boolean;
-  openInternalVideoChatWindow: (url: string, options: undefined) => void;
+  openInternalVideoChatWindow: (
+    url: string,
+    options: videoCallWindowOptions
+  ) => void;
   setGitCommitHash: (gitCommitHash: string) => void;
+  writeTextToClipboard: (text: string) => void;
+  getOutlookEvents: (date: Date) => Promise<OutlookEventsResponse>;
+  setOutlookExchangeUrl: (url: string, userId: string) => void;
+  hasOutlookCredentials: () => Promise<boolean>;
+  clearOutlookCredentials: () => void;
+  setUserToken: (token: string, userId: string) => void;
+  openDocumentViewer: (url: string, format: string, options: any) => void;
 };
 
 export const RocketChatDesktop: RocketChatDesktopAPI = {
@@ -60,6 +88,7 @@ export const RocketChatDesktop: RocketChatDesktopAPI = {
   setServerInfo: (_serverInfo) => {
     serverInfo = _serverInfo;
     cb(_serverInfo);
+    setServerVersionToSidebar(_serverInfo.version);
   },
   setUrlResolver,
   setBadge,
@@ -68,9 +97,18 @@ export const RocketChatDesktop: RocketChatDesktopAPI = {
   setTitle,
   setUserPresenceDetection,
   setUserLoggedIn,
+  setUserThemeAppearance,
   createNotification,
   destroyNotification,
   getInternalVideoChatWindowEnabled,
   openInternalVideoChatWindow,
   setGitCommitHash,
+  writeTextToClipboard,
+  getOutlookEvents,
+  setOutlookExchangeUrl,
+  hasOutlookCredentials,
+  clearOutlookCredentials,
+  setUserToken,
+  setSidebarCustomTheme,
+  openDocumentViewer,
 };

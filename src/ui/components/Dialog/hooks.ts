@@ -1,13 +1,5 @@
-import { useEffect, useRef, Ref } from 'react';
-
-// TODO: Remove this interface or understand why they removed it https://github.com/microsoft/TypeScript-DOM-lib-generator/issues/1029
-interface HTMLDialogElement extends HTMLElement {
-  open: boolean;
-  returnValue: string;
-  close(returnValue?: string): void;
-  show(): void;
-  showModal(): void;
-}
+import type { Ref } from 'react';
+import { useEffect, useRef } from 'react';
 
 export const useDialog = (
   visible: boolean,

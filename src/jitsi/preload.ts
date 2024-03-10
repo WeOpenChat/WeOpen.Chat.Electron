@@ -1,16 +1,19 @@
-import {
+import type {
   SourcesOptions,
   DesktopCapturerSource,
   NativeImage,
-  ipcRenderer,
   DesktopCapturer,
 } from 'electron';
+import { ipcRenderer } from 'electron';
 
 const jitsiDomain = window.location.origin;
 
-const desktopCapturer: DesktopCapturer = {
+export const desktopCapturer: DesktopCapturer = {
   getSources: (opts: SourcesOptions) =>
-    ipcRenderer.invoke('desktop-capturer-get-sources', [opts, jitsiDomain]),
+    ipcRenderer.invoke('jitsi-desktop-capturer-get-sources', [
+      opts,
+      jitsiDomain,
+    ]),
 };
 
 export type JitsiMeetElectronAPI = {
